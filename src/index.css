@@ -1,0 +1,103 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic renk token'ları — Light tema (varsayılan) */
+@theme {
+  --color-primary: #0057ff;
+  --color-primary-hover: #0046cc;
+  --color-primary-soft: #e6efff;
+
+  --color-bg-base: #f8f7f4;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #f0eee8;
+
+  --color-text: #1a1f2e;
+  --color-text-muted: #5c6573;
+  --color-text-subtle: #8a929e;
+
+  --color-border: #e5e2da;
+  --color-border-strong: #d4d0c4;
+
+  --color-success: #0e9f6e;
+  --color-success-soft: #e6f6f0;
+  --color-warning: #e78a00;
+  --color-warning-soft: #fdf4e3;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+}
+
+/* Koyu tema override */
+.dark {
+  --color-primary: #ff4696;
+  --color-primary-hover: #ff6baa;
+  --color-primary-soft: #3d1f38;
+
+  --color-bg-base: #1e1033;
+  --color-bg-surface: #2d1b45;
+  --color-bg-subtle: #3a2555;
+
+  --color-text: #f4f0fa;
+  --color-text-muted: #a89dc4;
+  --color-text-subtle: #7d6e9f;
+
+  --color-border: #3d2856;
+  --color-border-strong: #4f3870;
+
+  --color-success: #34d399;
+  --color-success-soft: #1a3d2e;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #3d2f0f;
+  --color-danger: #f87171;
+  --color-danger-soft: #3d1a1f;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-base);
+  color: var(--color-text);
+}
+
+/* CodeMirror'ı Tailwind tema sistemine duyarlu hale getirmek için */
+.cm-editor {
+  height: 100%;
+  font-size: 13px;
+}
+
+.cm-editor .cm-scroller {
+  font-family: var(--font-mono);
+}
+
+/* Önizleme alanı kaydırma çubukları */
+.preview-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.preview-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  border-radius: 8px;
+}
+.preview-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+.preview-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

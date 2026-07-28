@@ -1,0 +1,26 @@
+# Docker build bağlamında gereksiz/tehlikeli dosyaları dışla
+# Image boyutunu küçültür ve derleme hızlandırır.
+
+node_modules
+dist
+dist-ssr
+.git
+.gitignore
+.github
+.vscode
+.idea
+.DS_Store
+
+# Derleme çıktıları ve geçici dosyalar
+*.log
+npm-debug.log*
+.npm
+.eslintcache
+
+# Docker'ın kendi dosyaları (build bağlamına gerek yok)
+Dockerfile
+.dockerignore
+
+# Dokümantasyon (image içinde gerek yok)
+README.md
+LICENSE
