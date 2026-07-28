@@ -76,7 +76,8 @@ export function DiagramPreview() {
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
-  const lastPos = useRef({ x: 0, y: 0 })
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null)
   const prevFitSizeRef = useRef<{ w: number; h: number } | null>(null)
 
   const project = useMemo(
@@ -186,26 +187,55 @@ export function DiagramPreview() {
     }
   }, [])
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    setDragging(true)
-    lastPos.current = { x: e.clientX, y: e.clientY }
+  // Pan + pinch: Pointer Events (fare + dokunmatik + kalem).
+  // `touch-action: none` sayesinde tarayıcının sayfa kaydırması/pinch'i engellenir
+  // ve biz olayları kendimiz yönetiriz.
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollRef.current
+    if (!el) return
+    el.setPointerCapture(e.pointerId)
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (pointersRef.current.size === 2) {
+      const [a, b] = Array.from(pointersRef.current.values())
+      pinchRef.current = {
+        startDist: Math.hypot(a.x - b.x, a.y - b.y),
+        startZoom: zoom,
+      }
+      setDragging(false)
+    } else if (pointersRef.current.size === 1) {
+      setDragging(true)
+    }
   }
-  useEffect(() => {
-    if (!dragging) return
-    const move = (e: MouseEvent) => {
-      const dx = e.clientX - lastPos.current.x
-      const dy = e.clientY - lastPos.current.y
-      lastPos.current = { x: e.clientX, y: e.clientY }
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const prev = pointersRef.current.get(e.pointerId)
+    if (!prev) return
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+    if (pointersRef.current.size >= 2 && pinchRef.current && pinchRef.current.startDist > 0) {
+      const [a, b] = Array.from(pointersRef.current.values())
+      const dist = Math.hypot(a.x - b.x, a.y - b.y)
+      const factor = dist / pinchRef.current.startDist
+      setZoom(clampZoom(+(pinchRef.current.startZoom * factor).toFixed(3)))
+      return
+    }
+
+    if (pointersRef.current.size === 1 && dragging) {
+      const dx = e.clientX - prev.x
+      const dy = e.clientY - prev.y
       setPan((p) => ({ x: p.x + dx, y: p.y + dy }))
     }
-    const up = () => setDragging(false)
-    window.addEventListener('mousemove', move)
-    window.addEventListener('mouseup', up)
-    return () => {
-      window.removeEventListener('mousemove', move)
-      window.removeEventListener('mouseup', up)
+  }
+
+  const endPointer = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollRef.current
+    if (el && el.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId)
     }
-  }, [dragging])
+    pointersRef.current.delete(e.pointerId)
+    if (pointersRef.current.size < 2) pinchRef.current = null
+    if (pointersRef.current.size === 0) setDragging(false)
+  }
 
   const onWheel = (e: React.WheelEvent) => {
     if (!e.ctrlKey && !e.metaKey) return
@@ -295,8 +325,11 @@ export function DiagramPreview() {
       <div
         ref={scrollRef}
         className="preview-scroll relative flex-1 cursor-grab overflow-auto"
-        style={{ cursor: dragging ? 'grabbing' : 'grab' }}
-        onMouseDown={onMouseDown}
+        style={{ cursor: dragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
         onWheel={onWheel}
       >
         <div

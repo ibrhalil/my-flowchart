@@ -186,4 +186,8 @@ export const en = {
     toLight: 'Light theme',
     toDark: 'Dark theme',
   },
+  mobile: {
+    editorTab: 'Editor',
+    previewTab: 'Preview',
+  },
 } as const

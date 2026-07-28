@@ -186,4 +186,8 @@ export const tr = {
     toLight: 'Aydınlık tema',
     toDark: 'Karanlık tema',
   },
+  mobile: {
+    editorTab: 'Editör',
+    previewTab: 'Önizleme',
+  },
 } as const

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 interface SplitPaneProps {
   left: React.ReactNode
@@ -17,8 +17,8 @@ export function SplitPane({
   maxLeft = 80,
 }: SplitPaneProps) {
   const [leftPct, setLeftPct] = useState(initialLeft)
-  const dragging = useRef(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const separatorRef = useRef<HTMLDivElement | null>(null)
 
   const onMove = useCallback(
     (clientX: number) => {
@@ -31,22 +31,37 @@ export function SplitPane({
     [minLeft, maxLeft],
   )
 
-  useEffect(() => {
-    const mouseMove = (e: MouseEvent) => {
-      if (!dragging.current) return
+  // Pointer Events: fare + dokunmatik + kalem tek API altında.
+  // Ayraç üzerine pointer capture alınır, böylece sürükleme ayracın dışına çıksa
+  // bile takip edilir ve sayfa kaydırması `touch-action: none` ile engellenir.
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const sep = separatorRef.current
+      if (!sep) return
+      sep.setPointerCapture(e.pointerId)
+      document.body.style.userSelect = 'none'
+    },
+    [],
+  )
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.buttons === 0) return
       onMove(e.clientX)
-    }
-    const up = () => {
-      dragging.current = false
+    },
+    [onMove],
+  )
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const sep = separatorRef.current
+      if (sep && sep.hasPointerCapture(e.pointerId)) {
+        sep.releasePointerCapture(e.pointerId)
+      }
       document.body.style.userSelect = ''
-    }
-    window.addEventListener('mousemove', mouseMove)
-    window.addEventListener('mouseup', up)
-    return () => {
-      window.removeEventListener('mousemove', mouseMove)
-      window.removeEventListener('mouseup', up)
-    }
-  }, [onMove])
+    },
+    [],
+  )
 
   return (
     <div ref={containerRef} className="flex h-full w-full">
@@ -54,13 +69,15 @@ export function SplitPane({
         {left}
       </div>
       <div
+        ref={separatorRef}
         role="separator"
         aria-orientation="vertical"
-        onMouseDown={() => {
-          dragging.current = true
-          document.body.style.userSelect = 'none'
-        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
         className="group relative w-1.5 shrink-0 cursor-col-resize bg-border transition hover:bg-primary"
+        style={{ touchAction: 'none' }}
       >
         <div className="absolute inset-y-0 -left-1 -right-1" />
       </div>
