@@ -18,6 +18,7 @@ function baseConfig(theme: AppTheme) {
     securityLevel: 'strict' as const,
     theme: APP_THEME_TO_MERMAID[theme],
     look: 'classic' as const,
+    suppressErrorRendering: true,
     // htmlLabels:false -> etiketler <foreignObject> yerine <text> olarak üretilir.
     // Bu, SVG'nin <img> üzerinden canvas'a çizildiğinde canvas'in
     // kirlenmesini (taint -> toBlob SecurityError) önler; PNG export çalışır.
@@ -42,6 +43,12 @@ export function configureMermaid(theme: AppTheme) {
   if (initialized !== theme) applyTheme(theme)
 }
 
+function cleanupMermaidTempElements() {
+  const body = document.body
+  if (!body) return
+  body.querySelectorAll('div[id^="dmmd-"]').forEach((el) => el.remove())
+}
+
 export async function renderMermaid(code: string, theme: AppTheme): Promise<string> {
   configureMermaid(theme)
 
@@ -49,6 +56,8 @@ export async function renderMermaid(code: string, theme: AppTheme): Promise<stri
   if (!trimmed) {
     throw new Error(rt('preview.emptySource'))
   }
+
+  cleanupMermaidTempElements()
 
   // Mermaid render hata fırlatırsa yakalayıp yukarı iletelim
   const { svg } = await mermaid.render(genId(), trimmed)
