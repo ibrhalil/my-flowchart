@@ -40,7 +40,9 @@ export function HistoryPanel({ open, onClose }: HistoryPanelProps) {
         <Button
           variant="danger"
           size="sm"
-          onClick={clear}
+          onClick={() => {
+            if (window.confirm(t('history.clearConfirm'))) clear()
+          }}
           disabled={history.length === 0}
         >
           {t('history.clearAll')}

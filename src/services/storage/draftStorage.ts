@@ -16,7 +16,8 @@ export function loadDraft(): Partial<ProjectFile> | null {
   }
 }
 
-export function saveDraft(project: ProjectFile): void {
+/** Taslağı yazar. Depolama yazılamazsa false döner (sessizce yutulmaz). */
+export function saveDraft(project: ProjectFile): boolean {
   try {
     localStorage.setItem(
       DRAFT_KEY,
@@ -29,7 +30,9 @@ export function saveDraft(project: ProjectFile): void {
         updatedAt: project.updatedAt,
       }),
     )
+    return true
   } catch {
-    // sessizce yut
+    // Kota dolu / depolama kapalı olabilir — çağıran taraf hata durumunu bilir.
+    return false
   }
 }

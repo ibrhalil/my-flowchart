@@ -6,6 +6,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'flowchart',
     title: 'Temel Flowchart',
     description: 'Karar akışı olan klasik bir akış şeması.',
+    titleEn: 'Basic Flowchart',
+    descriptionEn: 'A classic flowchart with a decision branch.',
     code: `flowchart TD
     A([Başla]) --> B{Giriş geçerli mi?}
     B -- Evet --> C[Kullanıcıyı oluştur]
@@ -18,6 +20,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'flowchart',
     title: 'Stilli Flowchart',
     description: 'classDef ile renkli düğümler.',
+    titleEn: 'Styled Flowchart',
+    descriptionEn: 'Colorful nodes using classDef.',
     code: `flowchart LR
     A[Talep]:::primary --> B[Doğrula]:::warn
     B --> C[Onayla]:::ok
@@ -30,6 +34,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'sequenceDiagram',
     title: 'Sekans Diyagramı',
     description: 'Servisler arası mesaj akışı.',
+    titleEn: 'Sequence Diagram',
+    descriptionEn: 'Message flow between services.',
     code: `sequenceDiagram
     actor U as Kullanıcı
     participant F as Frontend
@@ -48,6 +54,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'classDiagram',
     title: 'Sınıf Diyagramı',
     description: 'Kalıtım ve ilişki örneği.',
+    titleEn: 'Class Diagram',
+    descriptionEn: 'Inheritance and relations example.',
     code: `classDiagram
     class Animal {
       +String name
@@ -68,6 +76,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'stateDiagram',
     title: 'Durum Diyagramı',
     description: 'Sipariş yaşam döngüsü.',
+    titleEn: 'State Diagram',
+    descriptionEn: 'Order lifecycle.',
     code: `stateDiagram-v2
     state "Beklemede" as A
     state "Onaylandı" as B
@@ -88,6 +98,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'erDiagram',
     title: 'Varlık-İlişki',
     description: 'Veritabanı şeması örneği.',
+    titleEn: 'Entity Relationship',
+    descriptionEn: 'Database schema example.',
     code: `erDiagram
     USER ||--o{ ORDER : "verir"
     ORDER ||--|{ LINE_ITEM : "içerir"
@@ -113,6 +125,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'gantt',
     title: 'Gantt Şeması',
     description: 'Proje zaman çizelgesi.',
+    titleEn: 'Gantt Chart',
+    descriptionEn: 'Project timeline.',
     code: `gantt
     title Yayın Takvimi
     dateFormat YYYY-MM-DD
@@ -135,6 +149,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'pie',
     title: 'Pasta Grafiği',
     description: 'Dağılım örneği.',
+    titleEn: 'Pie Chart',
+    descriptionEn: 'Distribution example.',
     code: `pie showData
     title Kullanım oranları
     "Masaüstü" : 55
@@ -146,6 +162,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'user-journey',
     title: 'Kullanıcı Yolculuğu',
     description: 'Deneyim haritası.',
+    titleEn: 'User Journey',
+    descriptionEn: 'Experience map.',
     code: `journey
     title Alışveriş deneyimi
     section Keşif
@@ -162,6 +180,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'gitGraph',
     title: 'Git Graph',
     description: 'Dal yapısı örneği.',
+    titleEn: 'Git Graph',
+    descriptionEn: 'Branching structure example.',
     code: `gitGraph
     commit
     commit
@@ -183,6 +203,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'mindmap',
     title: 'Zihin Haritası',
     description: 'Kavramsal ağaç.',
+    titleEn: 'Mindmap',
+    descriptionEn: 'Conceptual tree.',
     code: `mindmap
   root((Proje))
     Tasarım
@@ -202,6 +224,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'flowchart',
     title: 'Giriş / Kayıt Akışı',
     description: 'Kimlik doğrulama akışı: başarı ve hata dalları.',
+    titleEn: 'Sign-in / Sign-up Flow',
+    descriptionEn: 'Authentication flow with success and error branches.',
     code: `flowchart TD
     A([Uygulamayı aç]) --> B{Oturum açık?}
     B -- Evet --> Z([Ana ekrana git])
@@ -222,6 +246,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'flowchart',
     title: 'CI/CD Pipeline',
     description: 'Derleme, test, staging ve canlıya alma akışı.',
+    titleEn: 'CI/CD Pipeline',
+    descriptionEn: 'Build, test, staging and rollout flow.',
     code: `flowchart LR
     A[Commit push] --> B[Kod derle]
     B --> C[Birim test]
@@ -240,6 +266,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'sequenceDiagram',
     title: 'OAuth2 Giriş Akışı',
     description: 'Yetkilendirme koduyla çok aktörlü OAuth akışı.',
+    titleEn: 'OAuth2 Sign-in Flow',
+    descriptionEn: 'Multi-party OAuth flow with authorization code.',
     code: `sequenceDiagram
     actor U as Kullanıcı
     participant App as Uygulama
@@ -263,6 +291,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'stateDiagram',
     title: 'Bug Yaşam Döngüsü',
     description: 'Hata bildiriminden kapatmaya durum geçişleri.',
+    titleEn: 'Bug Lifecycle',
+    descriptionEn: 'State transitions from report to close.',
     code: `stateDiagram-v2
     state "Yeni" as Y
     state "Atanmış" as A
@@ -285,6 +315,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'classDiagram',
     title: 'Observer Tasarım Deseni',
     description: 'Gözlemci deseni: interface, realisazyon ve agregasyon.',
+    titleEn: 'Observer Design Pattern',
+    descriptionEn: 'Observer pattern: interface, realization and aggregation.',
     code: `classDiagram
     class Subject {
       -List~Observer~ observers
@@ -314,6 +346,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'erDiagram',
     title: 'Blog / CMS Şeması',
     description: 'Kullanıcı, yazı, yorum ve etiket ilişkileri.',
+    titleEn: 'Blog / CMS Schema',
+    descriptionEn: 'User, post, comment and tag relations.',
     code: `erDiagram
     USER ||--o{ POST : "yazar"
     POST ||--|{ COMMENT : "sahip"
@@ -350,6 +384,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'timeline',
     title: 'Ürün Yol Haritası',
     description: 'Çeyrek bazlı kilometre taşları ve hedefler.',
+    titleEn: 'Product Roadmap',
+    descriptionEn: 'Quarterly milestones and goals.',
     code: `timeline
     title Ürün Yol Haritası 2025
     section Q1
@@ -370,12 +406,14 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'quadrant',
     title: 'Öncelik Matrisi',
     description: 'Efor ve etki ekseninde görev dağılımı.',
+    titleEn: 'Priority Matrix',
+    descriptionEn: 'Task distribution by effort and impact.',
     code: `quadrantChart
     title Görev Öncelik Matrisi
     x-axis Düşük Efor --> Yüksek Efor
     y-axis Düşük Etki --> Yüksek Etki
-    quadrant-1 Hızlı Kazançlar
-    quadrant-2 Stratejik Projeler
+    quadrant-1 Stratejik Projeler
+    quadrant-2 Hızlı Kazançlar
     quadrant-3 İmkanlar
     quadrant-4 Rutin İşler
     "Bug düzeltme": [0.2, 0.8]
@@ -388,6 +426,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'requirement',
     title: 'Gereksinim Diyagramı',
     description: 'Sistem gereksinimleri ve doğrulama ilişkileri.',
+    titleEn: 'Requirement Diagram',
+    descriptionEn: 'System requirements and verification relations.',
     code: `requirementDiagram
     requirement giris {
       id: 1
@@ -423,6 +463,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'architecture',
     title: 'Mikroservis Mimarisi',
     description: 'Ön yüz, API, önbellek ve veritabanı bileşenleri.',
+    titleEn: 'Microservice Architecture',
+    descriptionEn: 'Frontend, API, cache and database components.',
     code: `architecture-beta
     group frontend(cloud)[Frontend]
     group backend(cloud)[Backend]
@@ -440,6 +482,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'xychart',
     title: 'Aylık Aktif Kullanıcı',
     description: 'Sütun grafikle aylık büyüme trendi.',
+    titleEn: 'Monthly Active Users',
+    descriptionEn: 'Monthly growth trend as a bar chart.',
     code: `xychart-beta
     title "Aylık Aktif Kullanıcılar (bin)"
     x-axis ["Oca", "Şub", "Mar", "Nis", "May", "Haz"]
@@ -451,6 +495,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'block',
     title: 'Sistem Bileşenleri',
     description: 'İstemci, API, önbellek ve işçi blok diyagramı.',
+    titleEn: 'System Components',
+    descriptionEn: 'Client, API, cache and worker block diagram.',
     code: `block-beta
     client["İstemci"]
     api["API Katmanı"]
@@ -471,6 +517,8 @@ export const TEMPLATES: TemplateEntry[] = [
     type: 'kanban',
     title: 'Sprint Panosu',
     description: 'Kanban: backlog, yapılacak, devam, inceleme ve tamamlandı.',
+    titleEn: 'Sprint Board',
+    descriptionEn: 'Kanban: backlog, to-do, doing, review and done.',
     code: `kanban
     backlog[Backlog]
         tasarim[Tasarım güncellemesi]@{ assigned: 'Ayşe' }

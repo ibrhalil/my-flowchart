@@ -10,10 +10,13 @@ import {
   CheckCircle2,
   Loader2,
   Frame,
+  HardDriveDownload,
+  HardDrive,
 } from 'lucide-react'
 
 import { useDiagramStore } from '../../store/diagramStore'
 import { useSettingsStore } from '../../store/settingsStore'
+import type { AppTheme } from '../../types/project'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { renderMermaid, parseError } from '../../services/mermaidRenderer'
 import { exportPng, exportSvg, exportMmd, exportJson, exportMarkdown } from '../../services/exporters/files'
@@ -30,13 +33,23 @@ const FIT_PAD = 56
 // Bu oranın üzerindeki SVG boyut değişimi auto-fit'i yeniden tetikler
 const FIT_REFIT_THRESHOLD = 0.15
 
+/** Başarıyla render edilmiş diyagram + hangi kaynak/tema sürümünden geldiği */
+interface RenderResult {
+  svg: string
+  code: string
+  theme: AppTheme
+}
+
 function getSvgNaturalSize(svgString: string): { width: number; height: number } | null {
   try {
     const doc = new DOMParser().parseFromString(svgString, 'image/svg+xml')
     const el = doc.documentElement
-    const w = parseFloat(el.getAttribute('width') ?? '')
-    const h = parseFloat(el.getAttribute('height') ?? '')
-    if (isFinite(w) && isFinite(h) && w > 0 && h > 0) {
+    const wRaw = (el.getAttribute('width') ?? '').trim()
+    const hRaw = (el.getAttribute('height') ?? '').trim()
+    const w = parseFloat(wRaw)
+    const h = parseFloat(hRaw)
+    const isAbs = (v: number, raw: string) => isFinite(v) && v > 0 && !raw.endsWith('%')
+    if (isAbs(w, wRaw) && isAbs(h, hRaw)) {
       return { width: w, height: h }
     }
     const vb = el.getAttribute('viewBox')
@@ -57,6 +70,7 @@ export function DiagramPreview() {
   const title = useDiagramStore((s) => s.title)
   const description = useDiagramStore((s) => s.description)
   const updatedAt = useDiagramStore((s) => s.updatedAt)
+  const draftState = useDiagramStore((s) => s.draftState)
   const loadProject = useDiagramStore((s) => s.loadProject)
   const setToast = useDiagramStore((s) => s.setToast)
 
@@ -66,7 +80,7 @@ export function DiagramPreview() {
 
   const debouncedCode = useDebouncedValue(code, 250)
 
-  const [svg, setSvg] = useState<string>('')
+  const [render, setRender] = useState<RenderResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [rendering, setRendering] = useState(false)
   const [zoom, setZoom] = useState(1)
@@ -99,12 +113,12 @@ export function DiagramPreview() {
     renderMermaid(debouncedCode, theme)
       .then((out) => {
         if (cancelled) return
-        setSvg(out)
+        setRender({ svg: out, code: debouncedCode, theme })
       })
       .catch((err) => {
         console.error('Mermaid diagram rendering failed:', err)
         if (cancelled) return
-        setSvg('')
+        setRender(null)
         setError(parseError(err))
       })
       .finally(() => {
@@ -115,8 +129,11 @@ export function DiagramPreview() {
     }
   }, [debouncedCode, theme])
 
+  // Görsel dışa aktarımı yalnızca SVG mevcut kaynak + tema sürümüne denkse güvenli.
+  const imagesFresh = render !== null && render.code === code && render.theme === theme
+
   const clampZoom = useCallback((z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)), [])
-  const svgSize = useMemo(() => getSvgNaturalSize(svg), [svg])
+  const svgSize = useMemo(() => (render ? getSvgNaturalSize(render.svg) : null), [render])
 
   const computeFitZoom = useCallback((): number | null => {
     const scroller = scrollRef.current
@@ -180,12 +197,20 @@ export function DiagramPreview() {
   }, [applyFit])
 
   const toggleFullscreen = useCallback(() => {
-    if (document.fullscreenElement) {
-      void document.exitFullscreen()
-    } else {
-      void containerRef.current?.requestFullscreen()
+    try {
+      if (document.fullscreenElement) {
+        void document.exitFullscreen().catch(() => {})
+      } else if (containerRef.current?.requestFullscreen) {
+        void containerRef.current.requestFullscreen().catch(() => {
+          setToast(t('preview.fullscreenError'))
+        })
+      } else {
+        setToast(t('preview.fullscreenError'))
+      }
+    } catch {
+      setToast(t('preview.fullscreenError'))
     }
-  }, [])
+  }, [setToast, t])
 
   // Pan + pinch: Pointer Events (fare + dokunmatik + kalem).
   // `touch-action: none` sayesinde tarayıcının sayfa kaydırması/pinch'i engellenir
@@ -234,7 +259,8 @@ export function DiagramPreview() {
     }
     pointersRef.current.delete(e.pointerId)
     if (pointersRef.current.size < 2) pinchRef.current = null
-    if (pointersRef.current.size === 0) setDragging(false)
+    // Pinch'ten tek parmağa dönüş: kalan parmakla sürüklemeye devam edilebilsin.
+    setDragging(pointersRef.current.size === 1)
   }
 
   const onWheel = (e: React.WheelEvent) => {
@@ -247,17 +273,28 @@ export function DiagramPreview() {
     })
   }
 
+  const [exportingPng, setExportingPng] = useState(false)
+
   const handleExportPng = async () => {
-    if (!svg) return
+    // Yalnızca güncel render'ı dışa aktar; bayat SVG'yi indirme.
+    if (!render || !imagesFresh || exportingPng) return
+    setExportingPng(true)
     try {
-      await exportPng(svg, project, pngScale)
+      await exportPng(render.svg, project, pngScale)
     } catch (err) {
       setToast(
         err instanceof Error
-          ? `${t('preview.errorPrefix')}${err.message}`
+          ? `${t('preview.exportErrorPrefix')}${err.message}`
           : t('preview.pngError'),
       )
+    } finally {
+      setExportingPng(false)
     }
+  }
+
+  const handleExportSvg = () => {
+    if (!render || !imagesFresh) return
+    exportSvg(render.svg, project)
   }
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -305,13 +342,14 @@ export function DiagramPreview() {
         onImport={() => fileInputRef.current?.click()}
         importing={importing}
         onPng={handleExportPng}
-        onSvg={() => svg && exportSvg(svg, project)}
+        onSvg={handleExportSvg}
         onMmd={() => exportMmd(project)}
         onJson={() => exportJson(project)}
         onMd={() => exportMarkdown(project)}
         onToggleFullscreen={toggleFullscreen}
         isFullscreen={isFullscreen}
-        hasError={Boolean(error)}
+        imagesReady={imagesFresh && !exportingPng}
+        exportingPng={exportingPng}
       />
 
       <input
@@ -324,7 +362,7 @@ export function DiagramPreview() {
 
       <div
         ref={scrollRef}
-        className="preview-scroll relative flex-1 cursor-grab overflow-auto"
+        className="preview-scroll preview-canvas relative flex-1 cursor-grab overflow-auto"
         style={{ cursor: dragging ? 'grabbing' : 'grab', touchAction: 'none' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -340,25 +378,39 @@ export function DiagramPreview() {
             transition: dragging ? 'none' : 'transform 120ms ease-out',
           }}
         >
-          {error ? (
-            <div className="flex max-w-md flex-col items-center gap-3 rounded-xl border border-danger/50 bg-danger-soft p-6 text-center text-text">
+          {render ? (
+            <div
+              className="rounded-lg bg-bg-surface p-6 shadow-sm ring-1 ring-border"
+              dangerouslySetInnerHTML={{ __html: render.svg }}
+            />
+          ) : !error ? (
+            <div className="text-sm text-text-subtle">{t('preview.previewNotReady')}</div>
+          ) : null}
+        </div>
+
+        {/* Hata kartı ve durum bildirimleri zoom/pan dönüşümünden bağımsızdır. */}
+        {error ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
+            <div className="pointer-events-auto flex max-w-md flex-col items-center gap-3 rounded-xl border border-danger/50 bg-danger-soft p-6 text-center text-text shadow-lg">
               <AlertTriangle size={28} className="text-danger" />
               <p className="text-sm font-semibold">{t('preview.renderErrorTitle')}</p>
               <pre className="max-h-60 w-full overflow-auto whitespace-pre-wrap text-left text-xs">{error}</pre>
             </div>
-          ) : svg ? (
-            <div
-              className="rounded-lg bg-bg-surface p-6 shadow-sm ring-1 ring-border"
-              dangerouslySetInnerHTML={{ __html: svg }}
-            />
-          ) : (
-            <div className="text-sm text-text-subtle">{t('preview.previewNotReady')}</div>
-          )}
-        </div>
+          </div>
+        ) : null}
+
+        {rendering && render && !error ? (
+          <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-bg-surface px-3 py-1 text-xs font-medium text-text-muted shadow-sm ring-1 ring-border">
+              <Loader2 size={12} className="animate-spin" />
+              {t('preview.statusRendering')}
+            </span>
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex items-center justify-between border-t border-border bg-bg-surface px-3 py-1.5 text-xs text-text-subtle">
-        <span className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between gap-3 border-t border-border bg-bg-surface px-3 py-1.5 text-xs text-text-subtle">
+        <span className="flex items-center gap-1.5" role="status">
           {error ? (
             <>
               <AlertTriangle size={12} className="text-danger" /> {t('preview.statusError')}
@@ -370,6 +422,21 @@ export function DiagramPreview() {
           ) : (
             <>
               <CheckCircle2 size={12} className="text-success" /> {t('preview.statusDone')}
+            </>
+          )}
+        </span>
+        <span className="flex items-center gap-1.5" role="status">
+          {draftState === 'pending' ? (
+            <>
+              <Loader2 size={12} className="animate-spin" /> {t('preview.saveSaving')}
+            </>
+          ) : draftState === 'error' ? (
+            <>
+              <HardDriveDownload size={12} className="text-danger" /> {t('preview.saveError')}
+            </>
+          ) : (
+            <>
+              <HardDrive size={12} className="text-success" /> {t('preview.saveSaved')}
             </>
           )}
         </span>
@@ -394,16 +461,32 @@ interface ToolbarProps {
   onMd: () => void
   onToggleFullscreen: () => void
   isFullscreen: boolean
-  hasError: boolean
+  /** PNG/SVG dışa aktarımı güncel render'a denk mi? */
+  imagesReady: boolean
+  exportingPng: boolean
 }
 
 function Toolbar(props: ToolbarProps) {
   const [exportMenu, setExportMenu] = useState(false)
+  const exportBtnRef = useRef<HTMLButtonElement | null>(null)
   const { t } = useTranslation()
 
-  const closeAllMenus = () => {
-    setExportMenu(false)
-  }
+  const closeAllMenus = () => setExportMenu(false)
+
+  // Menü açıkken Escape ile kapat ve odağı düğmeye geri ver.
+  useEffect(() => {
+    if (!exportMenu) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeAllMenus()
+        exportBtnRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [exportMenu])
+
+  const imageItemClass = props.imagesReady ? '' : 'opacity-50'
 
   return (
     <div className="@container flex items-center gap-1 border-b border-border bg-bg-surface px-3 py-2">
@@ -440,17 +523,21 @@ function Toolbar(props: ToolbarProps) {
       <div className="relative ml-auto flex items-center gap-1.5">
         {/* İçe aktar */}
         <Tooltip label={t('preview.importTooltip')} side="bottom">
-          <Button onClick={props.onImport} disabled={props.importing}>
+          <Button onClick={props.onImport} disabled={props.importing} aria-label={t('preview.import')}>
             <FileUp size={14} />
             <span className="hidden @sm:inline">{props.importing ? t('preview.importLoading') : t('preview.import')}</span>
           </Button>
         </Tooltip>
 
-        {/* Dışa aktar */}
+        {/* Dışa aktar — kaynak formatları her zaman erişilebilir; görsel
+            formatlar yalnızca güncel render varken etkindir. */}
         <Tooltip label={t('preview.exportTooltip')} side="bottom">
           <Button
+            ref={exportBtnRef}
             variant="primary"
-            disabled={props.hasError}
+            aria-label={t('preview.export')}
+            aria-haspopup="menu"
+            aria-expanded={exportMenu}
             onClick={() => setExportMenu((v) => !v)}
           >
             <Download size={14} />
@@ -464,13 +551,46 @@ function Toolbar(props: ToolbarProps) {
               onClick={closeAllMenus}
               aria-hidden
             />
-            <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-md border border-border bg-bg-surface py-1 text-sm shadow-lg" style={{ top: '100%' }}>
-              <MenuItem onClick={() => { props.onPng(); setExportMenu(false) }}>{t('preview.pngImage')}</MenuItem>
-              <MenuItem onClick={() => { props.onSvg(); setExportMenu(false) }}>{t('preview.svgVector')}</MenuItem>
+            <div
+              role="menu"
+              aria-label={t('preview.export')}
+              className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-md border border-border bg-bg-surface py-1 text-sm shadow-lg"
+              style={{ top: '100%' }}
+            >
+              <MenuItem
+                role="menuitem"
+                disabled={!props.imagesReady}
+                title={props.imagesReady ? undefined : t('preview.imagesStale')}
+                className={imageItemClass}
+                onClick={() => {
+                  props.onPng()
+                  setExportMenu(false)
+                }}
+              >
+                {props.exportingPng ? t('preview.statusRendering') : t('preview.pngImage')}
+              </MenuItem>
+              <MenuItem
+                role="menuitem"
+                disabled={!props.imagesReady}
+                title={props.imagesReady ? undefined : t('preview.imagesStale')}
+                className={imageItemClass}
+                onClick={() => {
+                  props.onSvg()
+                  setExportMenu(false)
+                }}
+              >
+                {t('preview.svgVector')}
+              </MenuItem>
               <div className="my-1 h-px bg-border" />
-              <MenuItem onClick={() => { props.onMd(); setExportMenu(false) }}>{t('preview.markdown')}</MenuItem>
-              <MenuItem onClick={() => { props.onMmd(); setExportMenu(false) }}>{t('preview.mermaidSource')}</MenuItem>
-              <MenuItem onClick={() => { props.onJson(); setExportMenu(false) }}>{t('preview.project')}</MenuItem>
+              <MenuItem role="menuitem" onClick={() => { props.onMd(); setExportMenu(false) }}>
+                {t('preview.markdown')}
+              </MenuItem>
+              <MenuItem role="menuitem" onClick={() => { props.onMmd(); setExportMenu(false) }}>
+                {t('preview.mermaidSource')}
+              </MenuItem>
+              <MenuItem role="menuitem" onClick={() => { props.onJson(); setExportMenu(false) }}>
+                {t('preview.project')}
+              </MenuItem>
             </div>
           </>
         ) : null}

@@ -124,8 +124,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               checked={autoSaveEnabled}
               onChange={setAutoSaveEnabled}
               label={autoSaveEnabled ? t('settings.on') : t('settings.off')}
+              ariaLabel={t('settings.autoSave')}
             />
-         </Field>
+          </Field>
 
           <Field label={t('settings.idleTimeout')}>
             <SegmentedGroup>
@@ -194,9 +195,9 @@ function Section({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-text-muted">{label}</label>
+      <span className="block text-xs font-medium text-text-muted">{label}</span>
       <div>{children}</div>
-  </div>
+    </div>
   )
 }
 
@@ -218,6 +219,7 @@ function ThemeCard({
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={`flex items-center gap-2 rounded-lg border p-3 text-left transition ${
         active
@@ -228,12 +230,12 @@ function ThemeCard({
       <span
         className={`inline-flex h-8 w-8 items-center justify-center rounded-md ${
           active
-            ? 'bg-primary text-white'
+            ? 'bg-primary text-on-primary'
             : 'bg-bg-subtle text-text-muted'
         }`}
       >
         {icon}
-     </span>
+      </span>
       <span className="text-sm font-medium text-text">{label}</span>
     </button>
   )
@@ -261,16 +263,17 @@ function Segmented({
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       disabled={disabled}
       className={`rounded-md px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
         active
-          ? 'bg-primary text-white shadow-sm'
+          ? 'bg-primary text-on-primary shadow-sm'
           : 'text-text-muted hover:text-text'
       }`}
     >
       {children}
-  </button>
+    </button>
   )
 }
 
@@ -278,16 +281,19 @@ function Toggle({
   checked,
   onChange,
   label,
+  ariaLabel,
 }: {
   checked: boolean
   onChange: (v: boolean) => void
   label: string
+  ariaLabel: string
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
       className="inline-flex items-center gap-2"
     >
@@ -301,8 +307,8 @@ function Toggle({
             checked ? 'left-[1.375rem]' : 'left-0.5'
           }`}
         />
-     </span>
+      </span>
       <span className="text-xs font-medium text-text-muted">{label}</span>
-  </button>
+    </button>
   )
 }

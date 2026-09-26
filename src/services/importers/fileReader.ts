@@ -13,6 +13,11 @@ function safeTheme(v: unknown): AppTheme | undefined {
   return typeof v === 'string' && (THEME_VALUES as string[]).includes(v) ? (v as AppTheme) : undefined
 }
 
+/** Yalnızca gerçek string değerleri kabul et; diğer türleri yok say. */
+function safeString(v: unknown): string | undefined {
+  return typeof v === 'string' ? v : undefined
+}
+
 export async function readTextFile(file: File): Promise<string> {
   return await file.text()
 }
@@ -45,11 +50,14 @@ export function importFromJson(text: string): ImportOutcome {
 
   const project: Partial<ProjectFile> = {
     code: candidate.code,
-    title: candidate.title,
-    description: candidate.description,
+    title: safeString(candidate.title),
+    description: safeString(candidate.description),
     theme: safeTheme(candidate.theme),
     pngScale:
-      typeof candidate.pngScale === 'number' && candidate.pngScale > 0 && candidate.pngScale <= 4
+      typeof candidate.pngScale === 'number' &&
+      Number.isFinite(candidate.pngScale) &&
+      candidate.pngScale > 0 &&
+      candidate.pngScale <= 4
         ? candidate.pngScale
         : undefined,
   }

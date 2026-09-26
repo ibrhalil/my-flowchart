@@ -103,7 +103,9 @@ export function Tooltip({ label, children, side = 'top', delay = 0, className }:
             >
               {label}
             </span>,
-            document.body,
+            // Tam ekran açıkken portal, tam ekran alt ağacına giderek
+            // üst katmanın (top layer) üzerinde görünebilir.
+            document.fullscreenElement ?? document.body,
           )
         : null}
     </>

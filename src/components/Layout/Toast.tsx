@@ -10,17 +10,22 @@ export function Toast() {
   useEffect(() => {
     if (!toast) return
     setVisible(true)
-    const t = setTimeout(() => {
-      setVisible(false)
-      setTimeout(() => setToast(null), 200)
-    }, 3000)
-    return () => clearTimeout(t)
+    // İki zamanlayıcıyı da temizle: yeni toast eski çıkış animasyonunun
+    // içine düşerse eski zamanlayıcı yeni bildirimi silmesin.
+    const hide = setTimeout(() => setVisible(false), 3000)
+    const clear = setTimeout(() => setToast(null), 3200)
+    return () => {
+      clearTimeout(hide)
+      clearTimeout(clear)
+    }
   }, [toast, setToast])
 
   if (!toast) return null
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       className={`pointer-events-none fixed left-1/2 top-2 z-50 -translate-x-1/2 transition-all duration-200 ${
         visible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
       }`}

@@ -29,6 +29,7 @@ export function EditorToolbar() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t('editor.titlePlaceholder')}
+          aria-label={t('editor.titlePlaceholder')}
           className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm font-medium text-text outline-none transition hover:border-border-strong focus:border-primary focus:bg-bg-surface"
         />
         <Tooltip label={t('editor.normalizeTooltip')} side="bottom">
@@ -47,6 +48,7 @@ export function EditorToolbar() {
           resizeDesc()
         }}
         placeholder={t('editor.descPlaceholder')}
+        aria-label={t('editor.descPlaceholder')}
         rows={1}
         className="mt-1 w-full resize-none overflow-auto rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm leading-relaxed text-text-muted outline-none transition hover:border-border-strong focus:border-primary focus:bg-bg-surface"
         style={{ maxHeight: 500 }}

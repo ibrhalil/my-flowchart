@@ -59,15 +59,21 @@ function stripForeignObjects(svg: string): string {
       const y = parseFloat(fo.getAttribute('y') || '0')
       const w = parseFloat(fo.getAttribute('width') || '0')
       const h = parseFloat(fo.getAttribute('height') || '0')
-      const text = (fo.textContent || '').replace(/\s+/g, ' ').trim()
+      // Blok elemanların arasına boşluk koyarak kelimelerin birleşmesini önle
+      // (`first<br/>second` -> `first second`).
+      const inner = (fo.innerHTML || '')
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/<\/(div|p|li|h[1-6])>/gi, ' ')
+      const htmlDoc = new DOMParser().parseFromString(inner, 'text/html')
+      const text = (htmlDoc.body.textContent || '').replace(/\s+/g, ' ').trim()
       const t = doc.createElementNS(svgNs, 'text')
       t.setAttribute('x', String(x + w / 2))
       t.setAttribute('y', String(y + h / 2))
       t.setAttribute('text-anchor', 'middle')
       t.setAttribute('dominant-baseline', 'central')
       // İç elemanın sınıfını taşıyarak font stilini devralmaya çalış
-      const inner = fo.firstElementChild as Element | null
-      const cls = inner?.getAttribute('class')
+      const innerEl = fo.firstElementChild as Element | null
+      const cls = innerEl?.getAttribute('class')
       if (cls) t.setAttribute('class', cls)
       if (text) t.textContent = text
       fo.replaceWith(t)
@@ -96,7 +102,7 @@ export function exportJson(project: ProjectFile): void {
 }
 
 export function exportMarkdown(project: ProjectFile): void {
-  const front = [
+  const fmLines = [
     '---',
     `title: ${JSON.stringify(project.title)}`,
     project.description ? `description: ${JSON.stringify(project.description)}` : null,
@@ -104,23 +110,22 @@ export function exportMarkdown(project: ProjectFile): void {
     `updated_at: ${new Date(project.updatedAt).toISOString()}`,
     '---',
     '',
-  ]
-    .filter(Boolean)
-    .join('\n')
+  ].filter((line): line is string => line !== null)
 
-  const body = [
+  const bodyLines = [
     `# ${project.title}`,
     '',
-    project.description ? `${project.description}\n` : null,
+    project.description ? project.description : null,
+    project.description ? '' : null,
     '```mermaid',
     project.code,
     '```',
     '',
-  ]
-    .filter(Boolean)
-    .join('\n')
+  ].filter((line): line is string => line !== null)
 
-  const blob = new Blob([front + body], { type: 'text/markdown;charset=utf-8' })
+  const blob = new Blob([`${fmLines.join('\n')}\n${bodyLines.join('\n')}`], {
+    type: 'text/markdown;charset=utf-8',
+  })
   saveAs(blob, `${baseName(project)}.md`)
 }
 

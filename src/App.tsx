@@ -39,6 +39,11 @@ export default function App() {
     </section>
   )
 
+  // Mobil: her iki panel de mount kalır; gizli olan yalnızca CSS ile saklanır.
+  // Böylece sekme değişiminde CodeMirror geri alma geçmişi ve önizleme
+  // zoom/pan durumu kaybolmaz.
+  const previewPane = <DiagramPreview />
+
   return (
     <div className="flex h-full flex-col bg-bg-base text-text">
       <Header
@@ -50,9 +55,12 @@ export default function App() {
 
       <main className="min-h-0 flex-1">
         {isDesktop ? (
-          <SplitPane left={editorPane} right={<DiagramPreview />} />
+          <SplitPane left={editorPane} right={previewPane} />
         ) : (
-          <div className="h-full">{mobileTab === 'editor' ? editorPane : <DiagramPreview />}</div>
+          <div className="h-full">
+            <div className={mobileTab === 'editor' ? 'h-full' : 'hidden'}>{editorPane}</div>
+            <div className={mobileTab === 'preview' ? 'h-full' : 'hidden'}>{previewPane}</div>
+          </div>
         )}
       </main>
 

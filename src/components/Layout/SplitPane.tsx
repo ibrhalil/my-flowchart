@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 
+import { useTranslation } from '../../lib/i18n'
+
 interface SplitPaneProps {
   left: React.ReactNode
   right: React.ReactNode
@@ -8,6 +10,10 @@ interface SplitPaneProps {
   minLeft?: number
   maxLeft?: number
 }
+
+/** Panellerin piksel cinsinden kullanılabilir alt sınırları */
+const MIN_LEFT_PX = 260
+const MIN_RIGHT_PX = 300
 
 export function SplitPane({
   left,
@@ -19,6 +25,29 @@ export function SplitPane({
   const [leftPct, setLeftPct] = useState(initialLeft)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const separatorRef = useRef<HTMLDivElement | null>(null)
+  const { t } = useTranslation()
+
+  const clampPct = useCallback(
+    (pct: number): number => {
+      const el = containerRef.current
+      let lo = minLeft
+      let hi = maxLeft
+      if (el) {
+        const w = el.getBoundingClientRect().width
+        if (w > 0) {
+          lo = Math.max(lo, (MIN_LEFT_PX / w) * 100)
+          hi = Math.min(hi, ((w - MIN_RIGHT_PX) / w) * 100)
+          if (hi < lo) {
+            // Panel çok dar: yüzde sınırlarına geri dön
+            lo = minLeft
+            hi = maxLeft
+          }
+        }
+      }
+      return Math.min(hi, Math.max(lo, pct))
+    },
+    [minLeft, maxLeft],
+  )
 
   const onMove = useCallback(
     (clientX: number) => {
@@ -26,9 +55,9 @@ export function SplitPane({
       if (!el) return
       const rect = el.getBoundingClientRect()
       const pct = ((clientX - rect.left) / rect.width) * 100
-      setLeftPct(Math.min(maxLeft, Math.max(minLeft, pct)))
+      setLeftPct(clampPct(pct))
     },
-    [minLeft, maxLeft],
+    [clampPct],
   )
 
   // Pointer Events: fare + dokunmatik + kalem tek API altında.
@@ -63,6 +92,24 @@ export function SplitPane({
     [],
   )
 
+  // Klavye ile boyutlandırma: ayraç odaklanabilir bir separator'dır.
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const step = e.shiftKey ? 5 : 2
+      let next: number | null = null
+      if (e.key === 'ArrowLeft') next = leftPct - step
+      else if (e.key === 'ArrowRight') next = leftPct + step
+      else if (e.key === 'Home') next = 0
+      else if (e.key === 'End') next = 100
+      if (next === null) return
+      e.preventDefault()
+      setLeftPct(clampPct(next))
+    },
+    [leftPct, clampPct],
+  )
+
+  const pctValue = Math.round(leftPct)
+
   return (
     <div ref={containerRef} className="flex h-full w-full">
       <div style={{ width: `${leftPct}%` }} className="h-full min-w-0 overflow-hidden">
@@ -72,11 +119,17 @@ export function SplitPane({
         ref={separatorRef}
         role="separator"
         aria-orientation="vertical"
+        aria-label={t('layout.splitter')}
+        aria-valuenow={pctValue}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="group relative w-1.5 shrink-0 cursor-col-resize bg-border transition hover:bg-primary"
+        className="group relative w-1.5 shrink-0 cursor-col-resize bg-border transition hover:bg-primary focus-visible:bg-primary"
         style={{ touchAction: 'none' }}
       >
         <div className="absolute inset-y-0 -left-1 -right-1" />

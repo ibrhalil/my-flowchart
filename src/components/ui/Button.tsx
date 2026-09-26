@@ -19,7 +19,7 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    'bg-primary text-white shadow-sm transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50',
+    'bg-primary text-on-primary shadow-sm transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50',
   ghost:
     'border border-border bg-bg-surface text-text-muted transition hover:bg-bg-subtle hover:text-text disabled:cursor-not-allowed disabled:opacity-50',
   danger:
@@ -66,7 +66,8 @@ export function IconButton({
 }: IconButtonProps) {
   return (
     <Tooltip label={label} side={side}>
-      <Button className={`h-7! w-7! px-0! ${className}`} {...rest}>
+      {/* aria-label: tooltip görsel bir ek; erişilebilir ad düğmenin kendisinde olmalı */}
+      <Button aria-label={label} className={`h-7! w-7! px-0! ${className}`} {...rest}>
         {children}
       </Button>
     </Tooltip>

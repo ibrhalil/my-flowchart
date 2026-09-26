@@ -16,13 +16,17 @@ import { useSettingsStore } from '../store/settingsStore'
 export function useAutoSnapshot(): void {
   const code = useDiagramStore((s) => s.code)
   const title = useDiagramStore((s) => s.title)
+  const description = useDiagramStore((s) => s.description)
   const saveSnapshot = useDiagramStore((s) => s.saveSnapshot)
 
   const autoSaveEnabled = useSettingsStore((s) => s.autoSaveEnabled)
   const autoSaveIdleMs = useSettingsStore((s) => s.autoSaveIdleMs)
 
   const saveRef = useRef(saveSnapshot)
-  saveRef.current = saveSnapshot
+
+  useEffect(() => {
+    saveRef.current = saveSnapshot
+  }, [saveSnapshot])
 
   // Idle tetikleyici
   useEffect(() => {
@@ -31,7 +35,7 @@ export function useAutoSnapshot(): void {
       saveRef.current()
     }, autoSaveIdleMs)
     return () => clearTimeout(t)
-  }, [code, title, autoSaveEnabled, autoSaveIdleMs])
+  }, [code, title, description, autoSaveEnabled, autoSaveIdleMs])
 
   // Window blur + visibilitychange tetikleyicileri
   useEffect(() => {

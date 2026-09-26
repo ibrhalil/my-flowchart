@@ -41,6 +41,10 @@ export interface TemplateEntry {
   type: DiagramType
   title: string
   description: string
+  /** EN arayüzde gösterilecek başlık (yoksa `title` kullanılır) */
+  titleEn?: string
+  /** EN arayüzde gösterilecek açıklama (yoksa `description` kullanılır) */
+  descriptionEn?: string
   code: string
 }
 
@@ -48,6 +52,8 @@ export interface HistoryEntry {
   id: string
   title: string
   code: string
+  /** Snapshot anındaki açıklama (eski kayıtlarda bulunmayabilir) */
+  description?: string
   savedAt: number
 }
 

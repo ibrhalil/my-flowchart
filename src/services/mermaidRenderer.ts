@@ -84,6 +84,22 @@ export function renderMermaid(code: string, theme: AppTheme): Promise<string> {
   return result
 }
 
+/**
+ * Kaynağın Mermaid tarafından ayrıştırılabilir olup olmadığını söyler.
+ * Otomatik düzeltme gibi kaynak metni değiştiren işlemlerin sonucunu
+ * uygulamadan önce güvenlik kontrolü olarak kullanılır.
+ */
+export async function canParse(code: string): Promise<boolean> {
+  const trimmed = code.trim()
+  if (!trimmed) return true
+  try {
+    await mermaid.parse(trimmed)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function parseError(err: unknown): string {
   if (err instanceof Error) return err.message
   if (typeof err === 'string') return err

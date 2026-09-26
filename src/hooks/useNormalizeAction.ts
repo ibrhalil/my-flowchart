@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 
 import { useDiagramStore } from '../store/diagramStore'
 import { useTranslation } from '../lib/i18n'
+import { canParse } from '../services/mermaidRenderer'
 import { isFlowchartLike, normalizeMermaid } from '../services/transform/normalizeMermaid'
 
 export function useNormalizeAction(): {
@@ -23,11 +24,19 @@ export function useNormalizeAction(): {
       setToast(t('editor.normalizeUnchanged'))
       return
     }
-    setCode(report.code)
-    const parts: string[] = []
-    if (report.renamed) parts.push(`${report.renamed} ${t('editor.normalizeIdUnit')}`)
-    if (report.quoted) parts.push(`${report.quoted} ${t('editor.normalizeLabelUnit')}`)
-    setToast(t('editor.normalizeDone', { detail: parts.length ? `: ${parts.join(' + ')}` : '' }))
+    // Sonucu uygulamadan önce Mermaid ayrıştırıcısıyla doğrula; dönüşüm
+    // geçerli bir kaynağı bozuyorsa kaynağa dokunma.
+    void canParse(report.code).then((ok) => {
+      if (!ok) {
+        setToast(t('editor.normalizeFailed'))
+        return
+      }
+      setCode(report.code)
+      const parts: string[] = []
+      if (report.renamed) parts.push(`${report.renamed} ${t('editor.normalizeIdUnit')}`)
+      if (report.quoted) parts.push(`${report.quoted} ${t('editor.normalizeLabelUnit')}`)
+      setToast(t('editor.normalizeDone', { detail: parts.length ? `: ${parts.join(' + ')}` : '' }))
+    })
   }, [code, setCode, setToast, t])
 
   return { run, canRun: isFlowchartLike(code) }

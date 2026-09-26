@@ -3,34 +3,66 @@
  *
  * Dönüşümler:
  *   1. Etiketli okları `-->|"etiket"|` post-label formatına indirger:
- *        A -- Evet --> B      →   A -->|"Evet"| B
- *        A -- "evet olur" --> B   →   A -->|"evet olur"| B
- *   2. Tırnaksız boşluk içeren ok-etiketlerini çift tırnaklar (yukarıdaki adımın parçası).
- *   3. Etiket/şekil dışindeki ASCII dışı veya boşluklu düz kimlikleri
+ *        A -- Evet --> B     →   A -->|"Evet"| B
+ *        A -. metin .-> B    →   A -.->|"metin"| B
+ *        A == metin ==> B    →   A ==>|"metin"| B
+ *   2. Etiket/şekil dışındaki ASCII dışı veya boşluklu düz kimlikleri
  *      benzersiz n1, n2, ... kimliklerine çevirir ve orijinal metni label'a taşır:
- *        Başlangıç --> Son   →   n1[Başlangıç] --> n2[Son]
- *        Süreç Başla --> X   →   n1[Süreç Başla] --> X
- *        Über --> Ende       →   n1[Über] --> n2[Ende]
+ *        Başlangıç --> Bitiş   →   n1[Başlangıç] --> n2[Bitiş]
  *
- * Şekil zaten varsa (örn.  Süreç[Label]) yalnızca kimlik rename edilir, etiket korunur.
+ * Güvenlik kuralları (geçerli sözdizimi asla bozulmaz):
+ *   - Çift tırnak içindeki içerik hiçbir zaman ok/kimlik sayılmaz.
+ *   - `;` ile ayrılan ifadeler tek tek işlenir; `&` ile birleşen düğümler
+ *     ayrı ayrı normalize edilir (örn. `A & B --> C` korunur).
+ *   - Satır sonundaki `%%` yorumları ve YAML frontmatter dokunulmaz kalır.
+ *   - Tanınmayan satırlar (subgraph, classDef, linkStyle, ...) olduğu gibi
+ *     korunur; yalnızca style/class/click satırlarındaki kimlik referansları
+ *     rename haritasıyla güncellenir.
+ *   - `%%{ ... }%%` direktif blokları çok satırlı olarak atlanır.
+ *
  * Diğer diyagram türlerine (sequence, class, gantt, vb.) dokunulmaz.
  */
 
 const DIRECTIVE_RE =
   /^(%%|subgraph\b|end\b|classDef\b|class\b|linkStyle\b|style\b|click\b|direction\b|graph\b|flowchart\b)/i
 
-/** Etiketli ok deseni: ` -- etiket --> ` (tırnaklı veya değil) */
-const LABELED_EDGE_RE = /\s--\s+(?:"([^"]*)"|([^|[\](){}<>"\n-]+?))\s+-->\s/g
-
-/** Ok ayraç + opsiyonel post-label: ` --> `, ` -->|...| `, ` -.-> `, `---`, `==>`, `===` */
-const ARROW_TOKEN_RE =
-  /(\s*(?:-->|==>|-\.->|-\.\.->|---|===)\s*(?:\|[^|\n]*\|\s*)?)/g
-
-const ARROW_ONLY_RE = /^\s*(?:-->|==>|-\.->|-\.\.->|---|===)\s*(?:\|[^|\n]*\|\s*)?$/
-
 const VALID_ASCII_ID_RE = /^[A-Za-z_][A-Za-z0-9_-]*$/
 
+/** Kimlik + opsiyonel şekil ayrımı için ilk şekil başlangıç karakteri */
 const SHAPE_START_RE = /[[({<"]/
+
+/** Hiç harf/rakam içermeyen parçalar (ok kalıntıları, noktalama) dokunulmaz */
+const HAS_WORD_CHAR_RE = /[A-Za-z0-9_\p{L}\p{N}]/u
+
+/** Etiketli ok kuralları: `-- etiket -->` biçimlerini post-label'a çevirir. */
+interface LabeledEdgeRule {
+  re: RegExp
+  render: (m: RegExpMatchArray) => string
+}
+
+const LABELED_EDGE_RULES: LabeledEdgeRule[] = [
+  {
+    // A -- etiket --> B  /  A -- "etiket" --> B  (--- ve ---> varyantlarıyla)
+    re: /^\s*--\s+(?:"([^"\n]*)"|([^"\n|[\]{}()<>-]+?))\s+(--->|-->|---)\s*/,
+    render: (m) => ` ${m[3]}|"${m[1] ?? m[2] ?? ''}"| `,
+  },
+  {
+    // A -. etiket .-> B  /  A -. etiket .- B
+    re: /^\s*-\.\s+(?:"([^"\n]*)"|([^"\n|[\]{}()<>.|,;=&-]+?))\s+\.(->)?\s*/,
+    render: (m) => ` -.${m[3] ? '->' : ''}|"${m[1] ?? m[2] ?? ''}"| `,
+  },
+  {
+    // A == etiket ==> B  /  A == etiket === B
+    re: /^\s*==\s+(?:"([^"\n]*)"|([^"\n|[\]{}()<>\-=]+?))\s+(===>|==>|===)\s*/,
+    render: (m) => ` ${m[3]}|"${m[1] ?? m[2] ?? ''}"| `,
+  },
+]
+
+/** Tırnak dışındaki düz ok belirteçleri (opsiyonel `|etiket|` son ekiyle). */
+const ARROW_AT =
+  /^(\s*)(--->|===>|-.->|<-->|--o|--x|o--|x--|-->|---|===|~~~|-.-|==>|-\.|--|==)(\s*)(\|[^|\n]*\|)?(\s*)/
+
+const FRONTMATTER_RE = /^---[ \t]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/
 
 export interface NormalizeReport {
   code: string
@@ -65,9 +97,60 @@ function genId(ctx: NormalizeContext): string {
   }
 }
 
-function normalizeNodeSegment(seg: string, ctx: NormalizeContext): string {
-  if (ARROW_ONLY_RE.test(seg)) return seg
+/** Çift tırnak dışındaki `;` ayraçlarını bölerek ifadeleri ayırır. */
+function splitStatements(line: string): string[] {
+  const parts: string[] = []
+  let buf = ''
+  let inQuote = false
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i]
+    if (ch === '"') {
+      inQuote = !inQuote
+      buf += ch
+    } else if (ch === ';' && !inQuote) {
+      parts.push(buf)
+      buf = ''
+    } else {
+      buf += ch
+    }
+  }
+  parts.push(buf)
+  return parts
+}
 
+/** Satırdaki ilk `%%` yorumunun (tırnak dışı) indeksini bulur. */
+function findCommentIndex(line: string): number {
+  let inQuote = false
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i]
+    if (ch === '"') inQuote = !inQuote
+    else if (!inQuote && ch === '%' && line[i + 1] === '%') return i
+  }
+  return -1
+}
+
+/** Çift tırnak dışındaki `&` ayraçlarıyla düğüm listesini böler. */
+function splitAmp(seg: string): string[] {
+  const parts: string[] = []
+  let buf = ''
+  let inQuote = false
+  for (let i = 0; i < seg.length; i += 1) {
+    const ch = seg[i]
+    if (ch === '"') {
+      inQuote = !inQuote
+      buf += ch
+    } else if (ch === '&' && !inQuote) {
+      parts.push(buf)
+      buf = ''
+    } else {
+      buf += ch
+    }
+  }
+  parts.push(buf)
+  return parts
+}
+
+function normalizeNodeSegment(seg: string, ctx: NormalizeContext): string {
   const leadMatch = seg.match(/^\s*/)
   const trailMatch = seg.match(/\s*$/)
   const lead = leadMatch ? leadMatch[0] : ''
@@ -96,9 +179,10 @@ function normalizeNodeSegment(seg: string, ctx: NormalizeContext): string {
   if (!realId.trim()) return seg
 
   // Geçerli ASCII kimlik → hiç dokunma
-  if (VALID_ASCII_ID_RE.test(realId)) {
-    return seg
-  }
+  if (VALID_ASCII_ID_RE.test(realId)) return seg
+
+  // Harf/rakam içermeyen parça (ok kalıntısı, noktalama) → dokunma
+  if (!HAS_WORD_CHAR_RE.test(realId)) return seg
 
   // ASCII dışı karakter veya boşluk içeriyor → rename
   let newId = ctx.renameMap.get(realId)
@@ -116,40 +200,105 @@ function normalizeNodeSegment(seg: string, ctx: NormalizeContext): string {
   return `${lead}${newId}[${realId}]${classSuffix}${trail}`
 }
 
-function normalizeLine(line: string, ctx: NormalizeContext): string {
-  const trimmed = line.trim()
-  if (!trimmed || DIRECTIVE_RE.test(trimmed)) return line
+function normalizeTextSegment(seg: string, ctx: NormalizeContext): string {
+  if (!seg.trim()) return seg
+  return splitAmp(seg)
+    .map((part) => normalizeNodeSegment(part, ctx))
+    .join('&')
+}
 
-  // 1) Etiketli okları post-label formatına çevir
-  let work = line.replace(
-    LABELED_EDGE_RE,
-    (_full, quoted: string | undefined, unquoted: string | undefined) => {
-      const label = quoted ?? unquoted ?? ''
-      if (unquoted && unquoted.includes(' ')) ctx.quoted += 1
-      return ` -->|"${label}"| `
-    },
-  )
+function normalizeStatement(stmt: string, ctx: NormalizeContext): string {
+  let out = ''
+  let buf = ''
+  let inQuote = false
+  let i = 0
 
-  // 2) Ok ayraçları ile segmentlere böl
-  const segments: string[] = []
-  let lastEnd = 0
-  ARROW_TOKEN_RE.lastIndex = 0
-  let m: RegExpExecArray | null
-  while ((m = ARROW_TOKEN_RE.exec(work)) !== null) {
-    segments.push(work.slice(lastEnd, m.index))
-    segments.push(m[0])
-    lastEnd = m.index + m[0].length
+  const flush = () => {
+    out += normalizeTextSegment(buf, ctx)
+    buf = ''
   }
-  segments.push(work.slice(lastEnd))
 
-  // 3) Her node segmentini normalize et
-  return segments.map((seg) => normalizeNodeSegment(seg, ctx)).join('')
+  while (i < stmt.length) {
+    const ch = stmt[i]
+    if (ch === '"') {
+      inQuote = !inQuote
+      buf += ch
+      i += 1
+      continue
+    }
+    if (!inQuote) {
+      const rest = stmt.slice(i)
+      let handled = false
+      for (const rule of LABELED_EDGE_RULES) {
+        const m = rest.match(rule.re)
+        if (m) {
+          flush()
+          out += rule.render(m)
+          if (m[2] !== undefined) ctx.quoted += 1
+          i += m[0].length
+          handled = true
+          break
+        }
+      }
+      if (handled) continue
+      const am = rest.match(ARROW_AT)
+      if (am) {
+        flush()
+        out += am[0]
+        i += am[0].length
+        continue
+      }
+    }
+    buf += ch
+    i += 1
+  }
+  flush()
+  return out
+}
+
+function normalizeFlowLine(line: string, ctx: NormalizeContext): string {
+  const trimmed = line.trim()
+  if (!trimmed) return line
+
+  const commentIdx = findCommentIndex(line)
+  const head = commentIdx === -1 ? line : line.slice(0, commentIdx)
+  const tail = commentIdx === -1 ? '' : line.slice(commentIdx)
+
+  const processed = splitStatements(head)
+    .map((stmt) => normalizeStatement(stmt, ctx))
+    .join(';')
+
+  return processed + tail
+}
+
+/**
+ * style/class/click satırlarındaki kimlik referanslarını rename haritasıyla günceller.
+ * Diğer direktif satırları (subgraph, classDef, linkStyle, ...) dokunulmaz kalır.
+ */
+function applyRenamesToDirective(line: string, map: Map<string, string>): string {
+  if (map.size === 0) return line
+  const st = line.match(/^(\s*)(style|click)\s+(\S+)([\s\S]*)$/i)
+  if (st) {
+    const repl = map.get(st[3]) ?? st[3]
+    return `${st[1]}${st[2]} ${repl}${st[4]}`
+  }
+  const cl = line.match(/^(\s*)class\s+([^\s]+)\s+(\S+)\s*$/i)
+  if (cl) {
+    const ids = cl[2]
+      .split(',')
+      .map((id) => map.get(id) ?? id)
+      .join(',')
+    return `${cl[1]}class ${ids} ${cl[3]}`
+  }
+  return line
 }
 
 export function normalizeMermaid(input: string): NormalizeReport {
   if (!isFlowchartLike(input)) {
     return { code: input, renamed: 0, quoted: 0, unchanged: true }
   }
+
+  const { frontmatter, body } = splitFrontmatter(input)
 
   const reserved = new Set<string>([
     'flowchart',
@@ -181,23 +330,48 @@ export function normalizeMermaid(input: string): NormalizeReport {
     quoted: 0,
   }
 
-  const lines = input.split('\n')
+  const lines = body.split('\n')
+  const processed: string[] = []
+  const isDirective: boolean[] = []
   let inDirective = false
-  const out = lines.map((line) => {
+
+  for (const line of lines) {
     // %%{ ... }%% direktif bloğu çok satırlı olabilir; içindeki
     // tüm satırları (}%% kapanışı dahil) olduğu gibi bırak.
     if (inDirective) {
       if (/\}%%/.test(line)) inDirective = false
-      return line
+      processed.push(line)
+      isDirective.push(true)
+      continue
     }
     if (/^\s*%%\{/.test(line)) {
       if (!/\}%%/.test(line)) inDirective = true
-      return line
+      processed.push(line)
+      isDirective.push(true)
+      continue
     }
-    return normalizeLine(line, ctx)
-  })
+    if (DIRECTIVE_RE.test(line.trim())) {
+      processed.push(line)
+      isDirective.push(true)
+      continue
+    }
+    processed.push(normalizeFlowLine(line, ctx))
+    isDirective.push(false)
+  }
 
-  const code = out.join('\n')
+  // Rename'ler belgenin sonrasında keşfedilmiş olabilir; direktif
+  // satırlarındaki referansları ikinci geçişte güncelle.
+  const out = lines.map((_line, idx) =>
+    isDirective[idx] ? applyRenamesToDirective(processed[idx], ctx.renameMap) : processed[idx],
+  )
+
+  const code = frontmatter + out.join('\n')
   const unchanged = code === input
   return { code, renamed: ctx.renamed, quoted: ctx.quoted, unchanged }
+}
+
+function splitFrontmatter(input: string): { frontmatter: string; body: string } {
+  const m = input.match(FRONTMATTER_RE)
+  if (!m) return { frontmatter: '', body: input }
+  return { frontmatter: m[0], body: input.slice(m[0].length) }
 }

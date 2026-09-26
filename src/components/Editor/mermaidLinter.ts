@@ -25,7 +25,11 @@ const LABEL_MASK_RE =
 const UNQUOTED_EDGE_LABEL_RE = /\s--\s+([^"|[\](){}\n]+?)\s+-->/g
 
 function maskLabels(line: string): string {
-  return line.replace(LABEL_MASK_RE, (m) => ' '.repeat(m.length))
+  // 1) Şekil etiketleri ve tırnaklı içerikler maskelenir.
+  const once = line.replace(LABEL_MASK_RE, (m) => ' '.repeat(m.length))
+  // 2) Tırnaksız ok-etiketleri de maskelenir; aksi halde `B -- Hayır --> D`
+  //    gibi geçerli satırlarda etiket sözcüğü yanlışlıkla node ID sanılır.
+  return once.replace(UNQUOTED_EDGE_LABEL_RE, (m) => ' '.repeat(m.length))
 }
 
 function analyzeLine(lineText: string, baseFrom: number): Diagnostic[] {

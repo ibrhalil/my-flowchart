@@ -38,20 +38,20 @@ export function Header({ onOpenTemplates, onOpenHistory, onOpenHelp, onOpenSetti
 
       <div className="ml-auto flex items-center gap-2">
         <Tooltip label={t('header.templatesTooltip')} side="bottom">
-          <Button onClick={onOpenTemplates}>
+          <Button onClick={onOpenTemplates} aria-label={t('header.templates')}>
             <LayoutTemplate size={16} />
             <span className="hidden md:inline">{t('header.templates')}</span>
-         </Button>
-       </Tooltip>
+          </Button>
+        </Tooltip>
 
         <Tooltip label={t('header.historyTooltip')} side="bottom">
-          <Button onClick={onOpenHistory}>
+          <Button onClick={onOpenHistory} aria-label={t('header.history')}>
             <History size={16} />
-         </Button>
-       </Tooltip>
+          </Button>
+        </Tooltip>
 
         <Tooltip label={t('header.helpTooltip')} side="bottom">
-          <Button onClick={onOpenHelp}>
+          <Button onClick={onOpenHelp} aria-label={t('header.help')}>
             <HelpCircle size={16} />
           </Button>
         </Tooltip>
@@ -61,6 +61,7 @@ export function Header({ onOpenTemplates, onOpenHistory, onOpenHelp, onOpenSetti
             href="https://mermaid.js.org/intro/"
             target="_blank"
             rel="noreferrer"
+            aria-label={t('header.mermaidDocs')}
             className="hidden h-8 w-8 items-center justify-center rounded-md border border-border bg-bg-surface text-text-muted transition hover:bg-bg-subtle hover:text-text sm:inline-flex"
           >
             <Book size={16} />
@@ -68,7 +69,7 @@ export function Header({ onOpenTemplates, onOpenHistory, onOpenHelp, onOpenSetti
         </Tooltip>
 
         <Tooltip label={t('header.settingsTooltip')} side="bottom">
-          <Button onClick={onOpenSettings} variant="primary">
+          <Button onClick={onOpenSettings} variant="primary" aria-label={t('header.settings')}>
             <Settings size={16} />
             <span className="hidden md:inline">{t('header.settings')}</span>
           </Button>

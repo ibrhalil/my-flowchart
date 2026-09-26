@@ -7,6 +7,7 @@
   --color-primary: #0057ff;
   --color-primary-hover: #0046cc;
   --color-primary-soft: #e6efff;
+  --color-on-primary: #ffffff;
 
   --color-bg-base: #f8f7f4;
   --color-bg-surface: #ffffff;
@@ -14,14 +15,14 @@
 
   --color-text: #1a1f2e;
   --color-text-muted: #5c6573;
-  --color-text-subtle: #8a929e;
+  --color-text-subtle: #6b7280;
 
   --color-border: #e5e2da;
   --color-border-strong: #d4d0c4;
 
   --color-success: #0e9f6e;
   --color-success-soft: #e6f6f0;
-  --color-warning: #e78a00;
+  --color-warning: #b45309;
   --color-warning-soft: #fdf4e3;
   --color-danger: #dc2626;
   --color-danger-soft: #fef2f2;
@@ -37,6 +38,7 @@
   --color-primary: #ff4696;
   --color-primary-hover: #ff6baa;
   --color-primary-soft: #3d1f38;
+  --color-on-primary: #2b0a1d;
 
   --color-bg-base: #1e1033;
   --color-bg-surface: #2d1b45;
@@ -44,7 +46,7 @@
 
   --color-text: #f4f0fa;
   --color-text-muted: #a89dc4;
-  --color-text-subtle: #7d6e9f;
+  --color-text-subtle: #9d90bd;
 
   --color-border: #3d2856;
   --color-border-strong: #4f3870;
@@ -59,6 +61,12 @@
 
 :root {
   color-scheme: light dark;
+}
+
+/* Klavye ile gezinmede görünür odak halkası */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 html,
@@ -100,4 +108,13 @@ body {
 }
 .preview-scroll::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Önizleme tuvali: hafif nokta ızgarası (dışa aktarılan SVG'yi etkilemez) */
+.preview-canvas {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--color-text-subtle) 42%, transparent) 1px,
+    transparent 1.5px
+  );
+  background-size: 24px 24px;
 }

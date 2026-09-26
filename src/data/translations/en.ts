@@ -1,5 +1,5 @@
 export const en = {
-  appTitle: 'Online Diagram Studio',
+  appTitle: 'My Flowchart',
   appSubtitle: 'Mermaid Diagram Editor',
   defaultTitle: 'Untitled Diagram',
   common: {
@@ -44,7 +44,7 @@ export const en = {
   help: {
     title: 'Mermaid Syntax Guide',
     goldenRule: 'Golden rule',
-    goldenRuleDesc: 'Node <strong>identity (ID</strong> must be ASCII and space-free; content in other languages always goes inside <code>[Label</code>. Correct pattern:',
+    goldenRuleDesc: 'Node <strong>identity (ID)</strong> must be ASCII and space-free; content in other languages always goes inside <code>[Label]</code>. Correct pattern:',
     goldenRuleExample: `flowchart TD
     A[Start] --> B{Valid?}
     B -- "yes" --> C[Process]
@@ -89,7 +89,7 @@ export const en = {
       },
     ],
     autoHelp: 'Automatic help',
-    autoHelpDesc: 'The <strong>Fix</strong> button in the source panel automatically converts non-ASCII node IDs in flowchart/graph blocks to <code>id[Label</code> format and wraps space-free arrow labels in quotes.',
+    autoHelpDesc: 'The <strong>Fix</strong> button in the source panel automatically converts non-ASCII node IDs in flowchart/graph blocks to <code>id[Label]</code> format and wraps unquoted arrow labels containing spaces in quotes.',
     autoHelpBtn: '✦ Fix',
   },
   preview: {
@@ -120,11 +120,14 @@ export const en = {
     mermaidSource: 'Mermaid source (.mmd)',
     project: 'Project (.json)',
     errorPrefix: 'Import error: ',
+    exportErrorPrefix: 'Export error: ',
     importFail: 'Import failed.',
     emptySource: 'Empty diagram source.',
     svgParseError: 'SVG output could not be parsed.',
     mermaidAriaLabel: 'Mermaid diagram',
     unknownRenderError: 'Unknown render error.',
+    fullscreenError: 'Fullscreen could not be opened.',
+    imagesStale: 'Waiting for a fresh render for image exports.',
     importedSource: 'Source file imported.',
     invalidJson: 'Invalid JSON file.',
     jsonNoCode: "JSON does not contain a 'code' field; not a valid project file.",
@@ -138,17 +141,29 @@ export const en = {
     pngError: 'PNG could not be produced.',
     historyCleared: 'History cleared.',
     restored: '"{title}" restored.',
+    saveSaved: 'Saved',
+    saveSaving: 'Saving…',
+    saveError: 'Save failed',
   },
   gallery: {
     title: 'Template Gallery',
     all: 'All',
+    search: 'Search templates…',
+    searchLabel: 'Search templates',
+    resultCount: '{count} results',
+    noResults: 'No matching templates.',
+    use: 'Use',
     toastLoad: '"{title}" template loaded.',
     noTemplates: 'No templates available.',
+  },
+  layout: {
+    splitter: 'Pane divider (resize with arrow keys)',
   },
   history: {
     title: 'History',
     recordCount: '{count} records',
     clearAll: 'Clear all',
+    clearConfirm: 'Delete all history records? This cannot be undone.',
     empty: 'No saved versions yet.',
     emptyDesc: 'Snapshots will appear here automatically as you edit.',
     restore: 'Restore',
@@ -163,6 +178,7 @@ export const en = {
     normalizeNoBlock: 'Fix only works on flowchart/graph blocks.',
     normalizeUnchanged: 'ASCII-safe: already valid.',
     normalizeDone: 'Fixed{detail}.',
+    normalizeFailed: 'The fix result could not be validated; source unchanged.',
     normalizeIdUnit: 'IDs',
     normalizeLabelUnit: 'labels',
   },
@@ -170,6 +186,7 @@ export const en = {
     loaded: 'Loaded.',
     autosaved: '✓ Auto-saved',
     historyCleared: 'History cleared.',
+    saveFailed: 'Could not save: browser storage write failed.',
   },
   header: {
     templates: 'Templates',

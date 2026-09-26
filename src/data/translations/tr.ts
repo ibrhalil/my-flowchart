@@ -1,5 +1,5 @@
 export const tr = {
-  appTitle: 'Online Diagram Studio',
+  appTitle: 'My Flowchart',
   appSubtitle: 'Mermaid Diyagram Editörü',
   defaultTitle: 'Adsız Diyagram',
   common: {
@@ -44,7 +44,7 @@ export const tr = {
   help: {
     title: 'Mermaid Sözdizimi Rehberi',
     goldenRule: 'Altın kural',
-    goldenRuleDesc: 'Node <strong>kimliği (ID</strong> ASCII ve boşluksuz olmalı; diğer dillerdeki içerik her zaman <code>[Etiket</code> içinde durur. Doğru kalıp:',
+    goldenRuleDesc: 'Node <strong>kimliği (ID)</strong> ASCII ve boşluksuz olmalı; diğer dillerdeki içerik her zaman <code>[Etiket]</code> içinde durur. Doğru kalıp:',
     goldenRuleExample: `flowchart TD
     A[Başlangıç] --> B{Geçerli mi?}
     B -- "evet" --> C[İşlem]
@@ -89,7 +89,7 @@ export const tr = {
       },
     ],
     autoHelp: 'Otomatik yardım',
-    autoHelpDesc: 'Kaynak panelindeki <strong>Düzelt</strong> düğmesi, flowchart/graph bloklarındaki düz ASCII dışı kimlikleri otomatik olarak <code>id[Etiket</code> biçimine çevirir ve tırnaksız boşluklu ok-etiketlerini çift tırnaklar.',
+    autoHelpDesc: 'Kaynak panelindeki <strong>Düzelt</strong> düğmesi, flowchart/graph bloklarındaki düz ASCII dışı kimlikleri otomatik olarak <code>id[Etiket]</code> biçimine çevirir ve tırnaksız boşluklu ok-etiketlerini çift tırnaklar.',
     autoHelpBtn: '✦ Düzelt',
   },
   preview: {
@@ -120,11 +120,14 @@ export const tr = {
     mermaidSource: 'Mermaid kaynak (.mmd)',
     project: 'Proje (.json)',
     errorPrefix: 'İçe aktarma hatası: ',
+    exportErrorPrefix: 'Dışa aktarma hatası: ',
     importFail: 'İçe aktarma başarısız.',
     emptySource: 'Boş diyagram kaynağı.',
     svgParseError: 'SVG çıktısı ayrıştırılamadı.',
     mermaidAriaLabel: 'Mermaid diyagramı',
     unknownRenderError: 'Bilinmeyen render hatası.',
+    fullscreenError: 'Tam ekran açılamadı.',
+    imagesStale: 'Görsel çıktılar için güncel render bekleniyor.',
     importedSource: 'Kaynak dosya içe aktarıldı.',
     invalidJson: 'Geçersiz JSON dosyası.',
     jsonNoCode: "JSON 'code' alanı içermiyor; geçerli bir proje dosyası değil.",
@@ -138,17 +141,29 @@ export const tr = {
     pngError: 'PNG üretilemedi.',
     historyCleared: 'Geçmiş temizlendi.',
     restored: '"{title}" geri yüklendi.',
+    saveSaved: 'Kaydedildi',
+    saveSaving: 'Kaydediliyor…',
+    saveError: 'Kaydedilemedi',
   },
   gallery: {
     title: 'Şablon Galerisi',
     all: 'Tümü',
+    search: 'Şablon ara…',
+    searchLabel: 'Şablon ara',
+    resultCount: '{count} sonuç',
+    noResults: 'Eşleşen şablon yok.',
+    use: 'Kullan',
     toastLoad: '"{title}" şablonu yüklendi.',
     noTemplates: 'Şablon yok.',
+  },
+  layout: {
+    splitter: 'Panel ayırıcı (ok tuşlarıyla boyutlandır)',
   },
   history: {
     title: 'Geçmiş',
     recordCount: '{count} kayıt',
     clearAll: 'Tümünü temizle',
+    clearConfirm: 'Tüm geçmiş kayıtları silinsin mi? Bu işlem geri alınamaz.',
     empty: 'Henüz kayıtlı bir sürüm yok.',
     emptyDesc: 'Düzenledikçe otomatik olarak buraya kaydedilir.',
     restore: 'Geri yükle',
@@ -163,6 +178,7 @@ export const tr = {
     normalizeNoBlock: 'Düzeltme yalnızca flowchart/graph bloklarında çalışır.',
     normalizeUnchanged: 'ASCII-güvenli: zaten uygun durumda.',
     normalizeDone: 'Düzeltildi{detail}.',
+    normalizeFailed: 'Düzeltme sonucu doğrulanamadı; kaynak değiştirilmedi.',
     normalizeIdUnit: 'kimlik',
     normalizeLabelUnit: 'etiket',
   },
@@ -170,6 +186,7 @@ export const tr = {
     loaded: 'Yüklendi.',
     autosaved: '✓ Otomatik kaydedildi',
     historyCleared: 'Geçmiş temizlendi.',
+    saveFailed: 'Kaydedilemedi: tarayıcı deposuna yazılamadı.',
   },
   header: {
     templates: 'Şablonlar',
