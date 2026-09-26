@@ -1,4 +1,5 @@
 import mermaid from 'mermaid'
+import elkLayouts from '@mermaid-js/layout-elk'
 
 import type { AppTheme } from '../types/project'
 import { rt } from '../lib/i18nRuntime'
@@ -6,6 +7,8 @@ import { rt } from '../lib/i18nRuntime'
 let initialized: AppTheme | null = null
 let renderCounter = 0
 let renderQueue: Promise<void> = Promise.resolve()
+
+mermaid.registerLayoutLoaders(elkLayouts)
 
 // Diyagram teması artık kullanıcı tarafından seçilmiyor; uygulama temasını takip eder.
 const APP_THEME_TO_MERMAID: Record<AppTheme, 'default' | 'dark'> = {
@@ -23,7 +26,12 @@ function baseConfig(theme: AppTheme) {
     // htmlLabels:false -> etiketler <foreignObject> yerine <text> olarak üretilir.
     // Bu, SVG'nin <img> üzerinden canvas'a çizildiğinde canvas'in
     // kirlenmesini (taint -> toBlob SecurityError) önler; PNG export çalışır.
-    flowchart: { useMaxWidth: false, htmlLabels: false, curve: 'basis' as const },
+    flowchart: {
+      useMaxWidth: false,
+      htmlLabels: false,
+      defaultRenderer: 'elk' as const,
+      curve: 'basis' as const,
+    },
     sequence: { useMaxWidth: false },
     gantt: { useMaxWidth: false },
     pie: { useMaxWidth: false },
