@@ -25,6 +25,7 @@ import { useTranslation } from '../../lib/i18n'
 import { Button, IconButton } from '../ui/Button'
 import { MenuItem } from '../ui/MenuItem'
 import { Tooltip } from '../Layout/Tooltip'
+import { suppressTooltipFocusOpen } from '../Layout/tooltipFocus'
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 10
@@ -199,6 +200,9 @@ export function DiagramPreview() {
   const toggleFullscreen = useCallback(() => {
     try {
       if (document.fullscreenElement) {
+        // Tam ekrandan çıkışta tarayıcı odağı toggle butonuna geri verir;
+        // bu programatik odak tooltip'i faresiz açmasın (yoksa ekranda takılır).
+        suppressTooltipFocusOpen(600)
         void document.exitFullscreen().catch(() => {})
       } else if (containerRef.current?.requestFullscreen) {
         void containerRef.current.requestFullscreen().catch(() => {

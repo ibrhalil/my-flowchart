@@ -1,6 +1,8 @@
 import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
+import { isTooltipFocusOpenSuppressed } from './tooltipFocus'
+
 interface TooltipProps {
   label: string
   children: ReactNode
@@ -84,7 +86,14 @@ export function Tooltip({ label, children, side = 'top', delay = 0, className }:
         className={`relative inline-flex ${className ?? ''}`}
         onMouseEnter={show}
         onMouseLeave={hide}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          // Programatik odak geri dönüşü (Modal kapanışı, fullscreen çıkışı)
+          // kullanıcının tooltip görme niyeti değildir; açılırsa fare dışında
+          // kalıp ekranda takılır. Bastırma penceresi dışındaki (klavye ile
+          // gelen) odaklar tooltip'i normal açar.
+          if (isTooltipFocusOpenSuppressed()) return
+          setOpen(true)
+        }}
         onBlur={() => setOpen(false)}
       >
         {children}

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react'
 import { X } from 'lucide-react'
 
 import { useTranslation } from '../../lib/i18n'
+import { suppressTooltipFocusOpen } from './tooltipFocus'
 
 interface ModalProps {
   open: boolean
@@ -61,6 +62,10 @@ export function Modal({ open, title, onClose, children, widthClass = 'max-w-3xl'
     window.addEventListener('keydown', onKey, true)
     return () => {
       window.removeEventListener('keydown', onKey, true)
+      // Odağı tetikleyiciye geri vermek erişilebilirlik için önemlidir; ancak
+      // bu programatik odak, tetikleyicinin tooltip'ini faresiz açıp ekranda
+      // takılı bırakır. Açılışı bastırıp odağı yine de geri veriyoruz.
+      suppressTooltipFocusOpen()
       restoreFocusRef.current?.focus?.()
     }
   }, [open, onClose])
