@@ -22,7 +22,7 @@ import { renderMermaid, parseError } from '../../services/mermaidRenderer'
 import { exportPng, exportSvg, exportMmd, exportJson, exportMarkdown } from '../../services/exporters/files'
 import { importFromFile } from '../../services/importers/fileReader'
 import { useTranslation } from '../../lib/i18n'
-import { Button, IconButton } from '../ui/Button'
+import { IconButton } from '../ui/Button'
 import { MenuItem } from '../ui/MenuItem'
 import { Tooltip } from '../Layout/Tooltip'
 import { suppressTooltipFocusOpen } from '../Layout/tooltipFocus'
@@ -499,12 +499,12 @@ function Toolbar(props: ToolbarProps) {
         label={props.isFullscreen ? t('preview.exitFullscreen') : t('preview.fullscreen')}
         onClick={props.onToggleFullscreen}
       >
-        {props.isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+        {props.isFullscreen ? <Minimize /> : <Maximize />}
       </IconButton>
 
       {/* Zoom grubu */}
       <IconButton label={t('preview.zoomOut')} onClick={props.zoomOut} disabled={props.zoom <= MIN_ZOOM}>
-        <ZoomOut size={16} />
+        <ZoomOut />
       </IconButton>
       <Tooltip label={t('preview.resetZoom')} side="bottom">
         <button
@@ -516,38 +516,42 @@ function Toolbar(props: ToolbarProps) {
         </button>
       </Tooltip>
       <IconButton label={t('preview.zoomIn')} onClick={props.zoomIn} disabled={props.zoom >= MAX_ZOOM}>
-        <ZoomIn size={16} />
+        <ZoomIn />
       </IconButton>
       <IconButton label={t('preview.fitToScreen')} onClick={props.onFit}>
-        <Frame size={16} />
+        <Frame />
       </IconButton>
 
       <div className="mx-0.5 h-5 w-px bg-border" />
 
       <div className="relative ml-auto flex items-center gap-1.5">
         {/* İçe aktar */}
-        <Tooltip label={t('preview.importTooltip')} side="bottom">
-          <Button onClick={props.onImport} disabled={props.importing} aria-label={t('preview.import')}>
-            <FileUp size={14} />
-            <span className="hidden @sm:inline">{props.importing ? t('preview.importLoading') : t('preview.import')}</span>
-          </Button>
-        </Tooltip>
+        <IconButton
+          label={t('preview.importTooltip')}
+          side="bottom"
+          onClick={props.onImport}
+          disabled={props.importing}
+        >
+          {props.importing ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <FileUp />
+          )}
+        </IconButton>
 
         {/* Dışa aktar — kaynak formatları her zaman erişilebilir; görsel
             formatlar yalnızca güncel render varken etkindir. */}
-        <Tooltip label={t('preview.exportTooltip')} side="bottom">
-          <Button
-            ref={exportBtnRef}
-            variant="primary"
-            aria-label={t('preview.export')}
-            aria-haspopup="menu"
-            aria-expanded={exportMenu}
-            onClick={() => setExportMenu((v) => !v)}
-          >
-            <Download size={14} />
-            <span className="hidden @sm:inline">{t('preview.export')}</span>
-          </Button>
-        </Tooltip>
+        <IconButton
+          ref={exportBtnRef}
+          label={t('preview.exportTooltip')}
+          side="bottom"
+          variant="primary"
+          aria-haspopup="menu"
+          aria-expanded={exportMenu}
+          onClick={() => setExportMenu((v) => !v)}
+        >
+          <Download />
+        </IconButton>
         {exportMenu ? (
           <>
             <div

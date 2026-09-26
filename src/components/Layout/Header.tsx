@@ -1,7 +1,7 @@
 import { Book, HelpCircle, History, LayoutTemplate, Settings } from 'lucide-react'
 
 import { Tooltip } from './Tooltip'
-import { Button } from '../ui/Button'
+import { IconButton } from '../ui/Button'
 import { useTranslation } from '../../lib/i18n'
 
 interface HeaderProps {
@@ -37,24 +37,17 @@ export function Header({ onOpenTemplates, onOpenHistory, onOpenHelp, onOpenSetti
       <div className="mx-1 hidden h-8 w-px bg-border sm:block" />
 
       <div className="ml-auto flex items-center gap-2">
-        <Tooltip label={t('header.templatesTooltip')} side="bottom">
-          <Button onClick={onOpenTemplates} aria-label={t('header.templates')}>
-            <LayoutTemplate size={16} />
-            <span className="hidden md:inline">{t('header.templates')}</span>
-          </Button>
-        </Tooltip>
+        <IconButton label={t('header.templatesTooltip')} side="bottom" onClick={onOpenTemplates}>
+          <LayoutTemplate />
+        </IconButton>
 
-        <Tooltip label={t('header.historyTooltip')} side="bottom">
-          <Button onClick={onOpenHistory} aria-label={t('header.history')}>
-            <History size={16} />
-          </Button>
-        </Tooltip>
+        <IconButton label={t('header.historyTooltip')} side="bottom" onClick={onOpenHistory}>
+          <History />
+        </IconButton>
 
-        <Tooltip label={t('header.helpTooltip')} side="bottom">
-          <Button onClick={onOpenHelp} aria-label={t('header.help')}>
-            <HelpCircle size={16} />
-          </Button>
-        </Tooltip>
+        <IconButton label={t('header.helpTooltip')} side="bottom" onClick={onOpenHelp}>
+          <HelpCircle />
+        </IconButton>
 
         <Tooltip label={t('header.mermaidDocs')} side="bottom">
           <a
@@ -62,18 +55,20 @@ export function Header({ onOpenTemplates, onOpenHistory, onOpenHelp, onOpenSetti
             target="_blank"
             rel="noreferrer"
             aria-label={t('header.mermaidDocs')}
-            className="hidden h-8 w-8 items-center justify-center rounded-md border border-border bg-bg-surface text-text-muted transition hover:bg-bg-subtle hover:text-text sm:inline-flex"
+            className="hidden h-8 w-8 items-center justify-center rounded-md border border-border bg-bg-surface text-text-muted transition hover:bg-bg-subtle hover:text-text sm:inline-flex sm:h-9 sm:w-9 [&_svg]:h-4 [&_svg]:w-4 sm:[&_svg]:h-[18px] sm:[&_svg]:w-[18px]"
           >
-            <Book size={16} />
+            <Book />
           </a>
         </Tooltip>
 
-        <Tooltip label={t('header.settingsTooltip')} side="bottom">
-          <Button onClick={onOpenSettings} variant="primary" aria-label={t('header.settings')}>
-            <Settings size={16} />
-            <span className="hidden md:inline">{t('header.settings')}</span>
-          </Button>
-        </Tooltip>
+        <IconButton
+          label={t('header.settingsTooltip')}
+          side="bottom"
+          variant="primary"
+          onClick={onOpenSettings}
+        >
+          <Settings />
+        </IconButton>
       </div>
    </header>
   )

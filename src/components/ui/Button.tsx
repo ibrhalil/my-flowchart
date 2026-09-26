@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, type Ref } from 'react'
 import { Tooltip } from '../Layout/Tooltip'
 
 type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'danger-soft'
@@ -52,6 +52,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 interface IconButtonOwnProps {
   label: string
   side?: 'top' | 'bottom' | 'left' | 'right'
+  /** Tetikleyici <button>'a iletilir (ör. Escape sonrası odağı geri döndürmek için). */
+  ref?: Ref<HTMLButtonElement>
 }
 
 export type IconButtonProps = IconButtonOwnProps &
@@ -62,12 +64,21 @@ export function IconButton({
   side = 'bottom',
   className = '',
   children,
+  ref,
   ...rest
 }: IconButtonProps) {
   return (
     <Tooltip label={label} side={side}>
-      {/* aria-label: tooltip görsel bir ek; erişilebilir ad düğmenin kendisinde olmalı */}
-      <Button aria-label={label} className={`h-7! w-7! px-0! ${className}`} {...rest}>
+      {/* aria-label: tooltip görsel bir ek; erişilebilir ad düğmenin kendisinde olmalı.
+          Boyutlar cihaz duyarlıdır: küçük ekranda 32px/16px ikon, sm ve
+          üzerinde 36px/18px ikon. İkon boyutu sarmalayıcıdaki CSS ile
+          belirlenir; lucide size özniteliğini CSS ezer. */}
+      <Button
+        ref={ref}
+        aria-label={label}
+        className={`h-8! w-8! px-0! sm:h-9! sm:w-9! [&_svg]:h-4 [&_svg]:w-4 sm:[&_svg]:h-[18px] sm:[&_svg]:w-[18px] ${className}`}
+        {...rest}
+      >
         {children}
       </Button>
     </Tooltip>

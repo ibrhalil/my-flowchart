@@ -5,8 +5,7 @@ import { useDiagramStore } from '../../store/diagramStore'
 import { useNormalizeAction } from '../../hooks/useNormalizeAction'
 import { useAutoGrowTextarea } from '../../hooks/useAutoGrowTextarea'
 import { useTranslation } from '../../lib/i18n'
-import { Tooltip } from '../Layout/Tooltip'
-import { Button } from '../ui/Button'
+import { IconButton } from '../ui/Button'
 
 export function EditorToolbar() {
   const title = useDiagramStore((s) => s.title)
@@ -32,12 +31,14 @@ export function EditorToolbar() {
           aria-label={t('editor.titlePlaceholder')}
           className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm font-medium text-text outline-none transition hover:border-border-strong focus:border-primary focus:bg-bg-surface"
         />
-        <Tooltip label={t('editor.normalizeTooltip')} side="bottom">
-          <Button onClick={runNormalize} className="shrink-0">
-            <Wand2 size={13} />
-            {t('editor.normalizeButton')}
-          </Button>
-        </Tooltip>
+        <IconButton
+          label={t('editor.normalizeTooltip')}
+          side="bottom"
+          onClick={runNormalize}
+          className="shrink-0"
+        >
+          <Wand2 />
+        </IconButton>
     </div>
 
       <textarea
