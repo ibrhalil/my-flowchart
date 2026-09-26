@@ -5,6 +5,7 @@ import { rt } from '../lib/i18nRuntime'
 
 let initialized: AppTheme | null = null
 let renderCounter = 0
+let renderQueue: Promise<void> = Promise.resolve()
 
 // Diyagram teması artık kullanıcı tarafından seçilmiyor; uygulama temasını takip eder.
 const APP_THEME_TO_MERMAID: Record<AppTheme, 'default' | 'dark'> = {
@@ -43,13 +44,7 @@ export function configureMermaid(theme: AppTheme) {
   if (initialized !== theme) applyTheme(theme)
 }
 
-function cleanupMermaidTempElements() {
-  const body = document.body
-  if (!body) return
-  body.querySelectorAll('div[id^="dmmd-"]').forEach((el) => el.remove())
-}
-
-export async function renderMermaid(code: string, theme: AppTheme): Promise<string> {
+async function renderOne(code: string, theme: AppTheme): Promise<string> {
   configureMermaid(theme)
 
   const trimmed = code.trim()
@@ -57,15 +52,13 @@ export async function renderMermaid(code: string, theme: AppTheme): Promise<stri
     throw new Error(rt('preview.emptySource'))
   }
 
-  cleanupMermaidTempElements()
-
-  // Mermaid render hata fırlatırsa yakalayıp yukarı iletelim
   const { svg } = await mermaid.render(genId(), trimmed)
 
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(svg, 'image/svg+xml')
-  const svgEl = doc.documentElement as unknown as SVGSVGElement
-  if (!svgEl || svgEl.nodeName.toLowerCase() !== 'svg') {
+  // Mermaid'in HTML olarak serileştirdiği SVG, XML ayrıştırıcısının kabul
+  // etmediği HTML entity'leri içerebilir. HTML ayrıştırıcısı SVG namespace'ini korur.
+  const doc = new DOMParser().parseFromString(svg, 'text/html')
+  const svgEl = doc.querySelector('svg')
+  if (!svgEl) {
     throw new Error(rt('preview.svgParseError'))
   }
   svgEl.setAttribute('aria-label', rt('preview.mermaidAriaLabel'))
@@ -73,6 +66,14 @@ export async function renderMermaid(code: string, theme: AppTheme): Promise<stri
   // svgEl üzerindeki aria-label değişikliğinin serialize edilmiş svg'ye yansıması için
   // documentElement'i tekrar string'e çeviriyoruz.
   return new XMLSerializer().serializeToString(svgEl)
+}
+
+export function renderMermaid(code: string, theme: AppTheme): Promise<string> {
+  // Mermaid paylaşılan DOM ve yapılandırma kullanır; eşzamanlı çizimler
+  // birbirlerinin geçici SVG'sini silip firstChild hatasına yol açabilir.
+  const result = renderQueue.then(() => renderOne(code, theme))
+  renderQueue = result.then(() => undefined, () => undefined)
+  return result
 }
 
 export function parseError(err: unknown): string {

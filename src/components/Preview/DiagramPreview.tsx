@@ -15,7 +15,7 @@ import {
 import { useDiagramStore } from '../../store/diagramStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
-import { renderMermaid, parseError, configureMermaid } from '../../services/mermaidRenderer'
+import { renderMermaid, parseError } from '../../services/mermaidRenderer'
 import { exportPng, exportSvg, exportMmd, exportJson, exportMarkdown } from '../../services/exporters/files'
 import { importFromFile } from '../../services/importers/fileReader'
 import { useTranslation } from '../../lib/i18n'
@@ -96,13 +96,13 @@ export function DiagramPreview() {
     let cancelled = false
     setRendering(true)
     setError(null)
-    configureMermaid(theme)
     renderMermaid(debouncedCode, theme)
       .then((out) => {
         if (cancelled) return
         setSvg(out)
       })
       .catch((err) => {
+        console.error('Mermaid diagram rendering failed:', err)
         if (cancelled) return
         setSvg('')
         setError(parseError(err))
@@ -478,5 +478,3 @@ function Toolbar(props: ToolbarProps) {
     </div>
   )
 }
-
-
