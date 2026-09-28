@@ -91,6 +91,7 @@ export function DiagramPreview() {
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  const diagramRef = useRef<HTMLDivElement | null>(null)
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null)
   const prevFitSizeRef = useRef<{ w: number; h: number } | null>(null)
@@ -157,14 +158,21 @@ export function DiagramPreview() {
     setPan({ x: 0, y: 0 })
   }, [computeFitZoom])
 
-  const zoomIn = useCallback(
-    () => setZoom((z) => clampZoom(+(z + 0.15).toFixed(2))),
-    [clampZoom],
-  )
-  const zoomOut = useCallback(
-    () => setZoom((z) => clampZoom(+(z - 0.15).toFixed(2))),
-    [clampZoom],
-  )
+  const changeZoom = useCallback((nextZoom: number) => {
+    const clampedZoom = clampZoom(nextZoom)
+    setZoom(clampedZoom)
+    requestAnimationFrame(() => {
+      const scroller = scrollRef.current
+      const diagram = diagramRef.current
+      if (!scroller || !diagram) return
+      const viewport = scroller.getBoundingClientRect()
+      const bounds = diagram.getBoundingClientRect()
+      scroller.scrollLeft += bounds.left + bounds.width / 2 - (viewport.left + viewport.width / 2)
+      scroller.scrollTop += bounds.top + bounds.height / 2 - (viewport.top + viewport.height / 2)
+    })
+  }, [clampZoom])
+  const zoomIn = useCallback(() => changeZoom(+(zoom + 0.15).toFixed(2)), [changeZoom, zoom])
+  const zoomOut = useCallback(() => changeZoom(+(zoom - 0.15).toFixed(2)), [changeZoom, zoom])
   const resetView = useCallback(() => {
     setZoom(1)
     setPan({ x: 0, y: 0 })
@@ -261,7 +269,7 @@ export function DiagramPreview() {
       const [a, b] = Array.from(pointersRef.current.values())
       const dist = Math.hypot(a.x - b.x, a.y - b.y)
       const factor = dist / pinchRef.current.startDist
-      setZoom(clampZoom(+(pinchRef.current.startZoom * factor).toFixed(3)))
+      changeZoom(+(pinchRef.current.startZoom * factor).toFixed(3))
       return
     }
 
@@ -287,10 +295,8 @@ export function DiagramPreview() {
     if (!e.ctrlKey && !e.metaKey) return
     e.preventDefault()
     // Mevcut zoom'a orantılı adım; yüksek zoomlarda daha doğal his.
-    setZoom((z) => {
-      const factor = z * (e.deltaY < 0 ? 0.12 : -0.12)
-      return clampZoom(+(z + factor).toFixed(3))
-    })
+    const factor = zoom * (e.deltaY < 0 ? 0.12 : -0.12)
+    changeZoom(+(zoom + factor).toFixed(3))
   }
 
   const [exportingPng, setExportingPng] = useState(false)
@@ -402,6 +408,7 @@ export function DiagramPreview() {
               }}
             >
               <div
+                ref={diagramRef}
                 className="preview-diagram absolute left-0 top-0 rounded-lg bg-bg-surface p-6 shadow-sm ring-1 ring-border"
                 style={{
                   width: svgSize ? `${svgSize.width + 48}px` : undefined,
