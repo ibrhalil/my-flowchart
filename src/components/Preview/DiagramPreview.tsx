@@ -91,7 +91,6 @@ export function DiagramPreview() {
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
-  const diagramRef = useRef<HTMLDivElement | null>(null)
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null)
   const prevFitSizeRef = useRef<{ w: number; h: number } | null>(null)
@@ -159,17 +158,7 @@ export function DiagramPreview() {
   }, [computeFitZoom])
 
   const changeZoom = useCallback((nextZoom: number) => {
-    const clampedZoom = clampZoom(nextZoom)
-    setZoom(clampedZoom)
-    requestAnimationFrame(() => {
-      const scroller = scrollRef.current
-      const diagram = diagramRef.current
-      if (!scroller || !diagram) return
-      const viewport = scroller.getBoundingClientRect()
-      const bounds = diagram.getBoundingClientRect()
-      scroller.scrollLeft += bounds.left + bounds.width / 2 - (viewport.left + viewport.width / 2)
-      scroller.scrollTop += bounds.top + bounds.height / 2 - (viewport.top + viewport.height / 2)
-    })
+    setZoom(clampZoom(nextZoom))
   }, [clampZoom])
   const zoomIn = useCallback(() => changeZoom(+(zoom + 0.15).toFixed(2)), [changeZoom, zoom])
   const zoomOut = useCallback(() => changeZoom(+(zoom - 0.15).toFixed(2)), [changeZoom, zoom])
@@ -408,7 +397,6 @@ export function DiagramPreview() {
               }}
             >
               <div
-                ref={diagramRef}
                 className="preview-diagram absolute left-0 top-0 rounded-lg bg-bg-surface p-6 shadow-sm ring-1 ring-border"
                 style={{
                   width: svgSize ? `${svgSize.width + 48}px` : undefined,
