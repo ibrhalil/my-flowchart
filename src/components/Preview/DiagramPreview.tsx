@@ -188,6 +188,22 @@ export function DiagramPreview() {
   }, [svgSize, applyFit])
 
   useEffect(() => {
+    const scroller = scrollRef.current
+    if (!scroller) return
+    let previousWidth = scroller.getBoundingClientRect().width
+    let previousHeight = scroller.getBoundingClientRect().height
+    const observer = new ResizeObserver(() => {
+      const { width, height } = scroller.getBoundingClientRect()
+      if (width === previousWidth && height === previousHeight) return
+      previousWidth = width
+      previousHeight = height
+      applyFit()
+    })
+    observer.observe(scroller)
+    return () => observer.disconnect()
+  }, [applyFit])
+
+  useEffect(() => {
     const onFsChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement))
       // Tam ekran geçişinde viewport değişir; bir sonraki karede yeniden sığdır.
@@ -376,17 +392,27 @@ export function DiagramPreview() {
       >
         <div
           className="flex min-h-full min-w-full items-center justify-center p-8"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: 'center center',
-            transition: dragging ? 'none' : 'transform 120ms ease-out',
-          }}
         >
           {render ? (
             <div
-              className="rounded-lg bg-bg-surface p-6 shadow-sm ring-1 ring-border"
-              dangerouslySetInnerHTML={{ __html: render.svg }}
-            />
+              className="relative shrink-0"
+              style={{
+                width: svgSize ? `${(svgSize.width + 48) * zoom}px` : undefined,
+                height: svgSize ? `${(svgSize.height + 48) * zoom}px` : undefined,
+              }}
+            >
+              <div
+                className="preview-diagram absolute left-0 top-0 rounded-lg bg-bg-surface p-6 shadow-sm ring-1 ring-border"
+                style={{
+                  width: svgSize ? `${svgSize.width + 48}px` : undefined,
+                  height: svgSize ? `${svgSize.height + 48}px` : undefined,
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  transformOrigin: 'top left',
+                  transition: dragging ? 'none' : 'transform 120ms ease-out',
+                }}
+                dangerouslySetInnerHTML={{ __html: render.svg }}
+              />
+            </div>
           ) : !error ? (
             <div className="text-sm text-text-subtle">{t('preview.previewNotReady')}</div>
           ) : null}
