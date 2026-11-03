@@ -26,6 +26,9 @@ function baseConfig(theme: AppTheme) {
     // htmlLabels:false -> etiketler <foreignObject> yerine <text> olarak üretilir.
     // Bu, SVG'nin <img> üzerinden canvas'a çizildiğinde canvas'in
     // kirlenmesini (taint -> toBlob SecurityError) önler; PNG export çalışır.
+    // ELK düzeni yalnızca kök seviyedeki `htmlLabels` anahtarına bakar;
+    // `flowchart.htmlLabels` tek başına yetmez.
+    htmlLabels: false,
     flowchart: {
       useMaxWidth: false,
       htmlLabels: false,

@@ -17,6 +17,13 @@ const slugify = (s: string): string =>
 
 const baseName = (p: ProjectFile): string => slugify(p.title)
 
+/** Önizleme kartıyla aynı: `p-6` iç boşluk ve `bg-bg-surface` zemini (index.css). */
+const PNG_PADDING = 24
+const PNG_BACKGROUND: Record<ProjectFile['theme'], string> = {
+  light: '#ffffff',
+  dark: '#2d1b45',
+}
+
 /**
  * SVG'de açık width/height yoksa viewBox'tan türetir.
  * <img> yüklemesinin doğru naturalWidth/Height alması (0-boyut failure
@@ -158,15 +165,16 @@ export async function exportPng(
       throw new Error(rt('preview.svgSizeError'))
     }
 
+    const pad = PNG_PADDING * scale
     const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, Math.round(natural.w * scale))
-    canvas.height = Math.max(1, Math.round(natural.h * scale))
+    canvas.width = Math.max(1, Math.round(natural.w * scale + 2 * pad))
+    canvas.height = Math.max(1, Math.round(natural.h * scale + 2 * pad))
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error(rt('preview.canvasContextError'))
 
-    ctx.fillStyle = project.theme === 'dark' ? '#1e1033' : '#ffffff'
+    ctx.fillStyle = PNG_BACKGROUND[project.theme]
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, pad, pad, natural.w * scale, natural.h * scale)
 
     await new Promise<void>((resolve, reject) => {
       canvas.toBlob((b) => {
