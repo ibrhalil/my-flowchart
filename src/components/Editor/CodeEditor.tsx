@@ -20,7 +20,6 @@ import {
 } from './mermaidLanguage'
 import { mermaidLinter } from './mermaidLinter'
 
-// Tema extension'larını runtime'da değiştirebilmek için (ışık/koyu geçişi).
 const themeCompartment = new Compartment()
 
 interface CodeEditorProps {
@@ -39,7 +38,6 @@ export function CodeEditor({ className }: CodeEditorProps) {
   const codeRef = useRef(code)
   codeRef.current = code
 
-  // Editörü bir kez kur
   useEffect(() => {
     if (!hostRef.current) return
 
@@ -88,7 +86,6 @@ export function CodeEditor({ className }: CodeEditorProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Tema değiştiğinde extension'ları yeniden yapılandır
   useEffect(() => {
     const view = viewRef.current
     if (!view) return
@@ -97,7 +94,6 @@ export function CodeEditor({ className }: CodeEditorProps) {
     })
   }, [theme])
 
-  // Font boyutu değiştiğinde editöre yansıt
   useEffect(() => {
     const view = viewRef.current
     if (!view) return

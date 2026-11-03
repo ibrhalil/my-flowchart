@@ -3,7 +3,6 @@ import { rt } from '../../lib/i18nRuntime'
 
 export interface ImportOutcome {
   project: Partial<ProjectFile>
-  /** Ayrıştırma sırasında kullanıcıya gösterilecek mesaj */
   note?: string
 }
 
@@ -13,7 +12,6 @@ function safeTheme(v: unknown): AppTheme | undefined {
   return typeof v === 'string' && (THEME_VALUES as string[]).includes(v) ? (v as AppTheme) : undefined
 }
 
-/** Yalnızca gerçek string değerleri kabul et; diğer türleri yok say. */
 function safeString(v: unknown): string | undefined {
   return typeof v === 'string' ? v : undefined
 }
@@ -97,6 +95,5 @@ export async function importFromFile(file: File): Promise<ImportOutcome> {
     }
   }
 
-  // Bilinmeyen uzantı: metin olarak deneyelim
   return importFromMmd(text, name)
 }

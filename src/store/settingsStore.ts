@@ -33,7 +33,6 @@ export const DEFAULT_SETTINGS: SettingsPatch = {
   autoSaveIdleMs: 5000,
 }
 
-/** Kalıcı depoya erişilemediğinde (kota/gizli mod) store işlemleri düşmesin. */
 const safeLocalStorage: StateStorage = {
   getItem: (name) => {
     try {
@@ -53,12 +52,10 @@ const safeLocalStorage: StateStorage = {
     try {
       localStorage.removeItem(name)
     } catch {
-      // yoksay
     }
   },
 }
 
-/** Depodan gelen bozuk/eski değerleri doğrulayıp filtreler. */
 function mergeValidated(persisted: unknown, current: SettingsPatch): SettingsPatch {
   const p = (persisted ?? {}) as Partial<Record<keyof SettingsPatch, unknown>>
   const num = (v: unknown, min: number, max: number, fallback: number): number =>

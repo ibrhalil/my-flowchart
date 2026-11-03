@@ -4,15 +4,8 @@ import type { Extension } from '@codemirror/state'
 import { rt } from '../../lib/i18nRuntime'
 import { isFlowchartLike } from '../../services/transform/normalizeMermaid'
 
-/**
- * Mermaid kaynak kodu üzerinde ASCII dışı karakter / boşluk kaynaklı
- * yaygın hataları işaretleyen CodeMirror linter.
- *
- * Kapsam: yalnızca `flowchart` ve `graph` blokları.
- * Diğer diyagram türleri farklı söz dizimine sahip; yanlış alarm üretmemek için atlanır.
- */
+/** flowchart/graph'ta ASCII dışı kimlikleri ve tırnaksız, boşluklu ok etiketlerini işaretler; diğer türler farklı söz dizimi kullanır, atlanır. */
 
-/** ASCII dışı herhangi bir karakter (Türkçe, Almanca, Kiril, Çince vb.) */
 const NON_ASCII = /\P{ASCII}/u
 
 const DIRECTIVE_RE =
@@ -20,15 +13,12 @@ const DIRECTIVE_RE =
 
 const ARROW_TOKEN_RE = /^[-=.>+]+$/
 
-/** Etiket/içerik maskesi: köşeli/parantezli içerikleri boşlukla değiştirir */
 const LABEL_MASK_RE =
   /(\[[^\]]*\]|\(\([^)]*\)\)|\([\s\S]*?\)|\{[^}]*\}|<[^>]*>|\|[^|]*\|)|"[^"]*"/g
 
-/** Ok-etiketi deseni: `-- etiket -->` (tırnaksız) */
 const UNQUOTED_EDGE_LABEL_RE = /\s--\s+([^"|[\](){}\n]+?)\s+-->/g
 
 function maskLabels(line: string): string {
-  // 1) Şekil etiketleri ve tırnaklı içerikler maskelenir.
   const once = line.replace(LABEL_MASK_RE, (m) => ' '.repeat(m.length))
   // 2) Tırnaksız ok-etiketleri de maskelenir; aksi halde `B -- Hayır --> D`
   //    gibi geçerli satırlarda etiket sözcüğü yanlışlıkla node ID sanılır.
@@ -40,15 +30,12 @@ function analyzeLine(lineText: string, baseFrom: number): Diagnostic[] {
   const trimmed = lineText.trim()
   if (!trimmed || DIRECTIVE_RE.test(trimmed)) return out
 
-  // 1) Düz node kimliklerinde ASCII dışı karakter araması
   const masked = maskLabels(lineText)
   const wordRe = /\S+/g
   let m: RegExpExecArray | null
   while ((m = wordRe.exec(masked)) !== null) {
     const word = m[0]
-    // Ok sembolleri ve sadece noktalama içeren token'lar atlanır
     if (ARROW_TOKEN_RE.test(word)) continue
-    // Birden çok segmenti olan (örn. A:::cls) kelimeyi ID kısmına indir
     const idPart = word.split(/::|:/)[0]
     if (!idPart) continue
     if (NON_ASCII.test(idPart)) {
@@ -61,7 +48,6 @@ function analyzeLine(lineText: string, baseFrom: number): Diagnostic[] {
     }
   }
 
-  // 2) Tırnaksız, boşluk içeren ok-etiketleri
   let em: RegExpExecArray | null
   UNQUOTED_EDGE_LABEL_RE.lastIndex = 0
   while ((em = UNQUOTED_EDGE_LABEL_RE.exec(lineText)) !== null) {
@@ -83,7 +69,6 @@ export const mermaidLinter: Extension = linter((view) => {
   const doc = view.state.doc
   const text = doc.toString()
 
-  // Yalnızca flowchart/graph blokları işle
   if (!isFlowchartLike(text)) return []
 
   const diagnostics: Diagnostic[] = []

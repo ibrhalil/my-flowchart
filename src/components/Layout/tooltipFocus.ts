@@ -1,10 +1,6 @@
 /**
- * Programatik odak geri dönüşünde (ör. Modal kapanışı odağı tetikleyici
- * butona geri verir, tam ekrandan çıkış odağı toggle butonuna döndürür)
- * tooltip'in faresiz açılıp ekranda takılmasını önlemek için kısa süreli
- * bastırma bayrağı. `ms` süresi boyunca focus kaynaklı tooltip açılışı
- * yok sayılır; süre dolunca bayrak kendiliğinden düşer, klavye (Tab) ile
- * gelen odak tooltip'i her zamanki gibi açmaya devam eder.
+ * Programatik odak geri dönüşü (Modal kapanışı, tam ekran çıkışı) tooltip'i faresiz açıp ekranda
+ * takılı bırakır; `ms` boyunca focus kaynaklı açılış yok sayılır. Klavye (Tab) odağı etkilenmez.
  */
 let suppressFocusOpenUntil = 0
 

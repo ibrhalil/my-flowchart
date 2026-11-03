@@ -45,10 +45,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   )
 })
 
-/* ------------------------------------------------------------------ */
-/*  IconButton — icon-only Button with auto Tooltip                    */
-/* ------------------------------------------------------------------ */
-
 interface IconButtonOwnProps {
   label: string
   side?: 'top' | 'bottom' | 'left' | 'right'

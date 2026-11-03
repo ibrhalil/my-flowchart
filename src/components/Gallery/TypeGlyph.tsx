@@ -1,10 +1,6 @@
 import type { DiagramType } from '../../types/project'
 
-/**
- * Diyagram türü için hafif, tutarlı SVG glif.
- * Gerçek Mermaid render'ı yerine statik çizimler kullanır:
- * galeri açılışında 24 render maliyeti ödenmez, temayla uyumlu kalır.
- */
+/** Statik SVG glifler: galeri açılışında 24 Mermaid render maliyeti ödenmez, temayla uyumlu kalır. */
 
 const S = {
   stroke: 'currentColor',

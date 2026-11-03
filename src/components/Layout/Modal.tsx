@@ -31,7 +31,6 @@ export function Modal({ open, title, onClose, children, widthClass = 'max-w-3xl'
   useEffect(() => {
     if (!open) return
 
-    // Açılış: odağı diyaloğa taşı; kapanışta tetikleyiciye geri ver.
     restoreFocusRef.current = document.activeElement as HTMLElement | null
     const dialog = dialogRef.current
     if (dialog) {
@@ -69,9 +68,7 @@ export function Modal({ open, title, onClose, children, widthClass = 'max-w-3xl'
     window.addEventListener('keydown', onKey, true)
     return () => {
       window.removeEventListener('keydown', onKey, true)
-      // Odağı tetikleyiciye geri vermek erişilebilirlik için önemlidir; ancak
-      // bu programatik odak, tetikleyicinin tooltip'ini faresiz açıp ekranda
-      // takılı bırakır. Açılışı bastırıp odağı yine de geri veriyoruz.
+      // Odağı geri vermek erişilebilirlik için şart; tooltip faresiz açılıp takılmasın diye açılış bastırılır.
       suppressTooltipFocusOpen()
       restoreFocusRef.current?.focus?.()
     }

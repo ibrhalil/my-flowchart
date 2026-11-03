@@ -39,7 +39,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   return (
     <Modal open={open} onClose={onClose} title={t('settings.title')} widthClass="max-w-2xl">
       <div className="space-y-6 p-5">
-        {/* 1. Görünüm */}
         <Section title={t('settings.appearance')} subtitle={t('settings.appearanceSubtitle')}>
           <Field label={t('settings.appTheme')}>
             <div className="grid grid-cols-2 gap-2">
@@ -61,7 +60,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
         <Divider />
 
-        {/* 2. Dil */}
         <Section title={t('settings.language')} subtitle={t('settings.languageSubtitle')}>
           <Field label={t('language.label')}>
             <SegmentedGroup>
@@ -83,7 +81,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
         <Divider />
 
-        {/* 3. Düzenleme */}
         <Section title={t('settings.editor')} subtitle={t('settings.editorSubtitle')}>
           <Field label={t('settings.editorFontSize')}>
             <SegmentedGroup>
@@ -102,7 +99,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
         <Divider />
 
-        {/* 4. Çıktı */}
         <Section title={t('settings.output')} subtitle={t('settings.outputSubtitle')}>
           <Field label={t('settings.pngResolution')}>
             <SegmentedGroup>
@@ -117,7 +113,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
         <Divider />
 
-        {/* 5. Otomatik kaydet */}
         <Section title={t('settings.autoSave')} subtitle={t('settings.autoSaveSubtitle')}>
           <Field label={t('settings.status')}>
             <Toggle
@@ -146,7 +141,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
         <Divider />
 
-        {/* 6. Sıfırla */}
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm font-medium text-text">

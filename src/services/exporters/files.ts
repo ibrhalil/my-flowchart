@@ -8,7 +8,6 @@ const slugify = (s: string): string =>
     // 'tr' yerel ayarı: İ -> i, I -> ı (varsayılan toLowerCase "i̇" üretir).
     .toLocaleLowerCase('tr')
     .replace(/ı/g, 'i')
-    // Aksanlı harfleri ayrıştırıp işaretleri at: ç->c, ğ->g, ö->o, ş->s, ü->u, é->e …
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
@@ -23,7 +22,6 @@ const PNG_BACKGROUND: Record<ProjectFile['theme'], string> = {
   dark: '#2d1b45',
 }
 
-/** `width="100%"` gibi yüzdeli / geçersiz değerler <img> için içsel boyut sayılmaz. */
 const isAbsoluteSize = (v: string | null): boolean => {
   if (!v) return false
   const n = parseFloat(v)
@@ -31,10 +29,8 @@ const isAbsoluteSize = (v: string | null): boolean => {
 }
 
 /**
- * SVG'de mutlak width/height yoksa viewBox'tan türetir.
- * Mermaid `useMaxWidth` açık türlerde (class, state, ER, mindmap …)
- * `width="100%"` üretir; <img> yüklemesinin doğru naturalWidth/Height alması
- * (0-boyut / 300x150 failure modunu önlemek) için bu değerler değiştirilir.
+ * Mermaid `useMaxWidth` açık türlerde `width="100%"` üretir; <img> doğru naturalWidth/Height
+ * alsın diye mutlak olmayan boyutlar viewBox'tan türetilir.
  */
 function ensureSvgSize(svg: string): string {
   try {
@@ -55,14 +51,7 @@ function ensureSvgSize(svg: string): string {
   }
 }
 
-/**
- * SVG'deki tüm <foreignObject> elemanlarını <text>'e çevirir.
- *
- * foreignObject içeren bir SVG <img> ile yüklenip canvas'a çizildiğinde
- * canvas kirlenir (taint) ve toBlob SecurityError fırlatır -> PNG üretilemez.
- * Etiketlerin metnini merkezlenmiş <text> olarak yeniden yerleştirir;
- * böylece SVG foreignObject'süz olur, canvas kirlenmez, PNG oluşur.
- */
+/** <foreignObject> içeren SVG canvas'ı kirletir (toBlob SecurityError); etiketleri merkezlenmiş <text>'e çevirir. */
 function stripForeignObjects(svg: string): string {
   try {
     const doc = new DOMParser().parseFromString(svg, 'image/svg+xml')
@@ -85,7 +74,6 @@ function stripForeignObjects(svg: string): string {
       t.setAttribute('y', String(y + h / 2))
       t.setAttribute('text-anchor', 'middle')
       t.setAttribute('dominant-baseline', 'central')
-      // İç elemanın sınıfını taşıyarak font stilini devralmaya çalış
       const innerEl = fo.firstElementChild as Element | null
       const cls = innerEl?.getAttribute('class')
       if (cls) t.setAttribute('class', cls)
@@ -153,7 +141,6 @@ export async function exportPng(
   project: ProjectFile,
   scale = project.pngScale ?? 2,
 ): Promise<void> {
-  // foreignObject -> text dönüşümü: canvas kirlenmesini (taint) önler.
   const stripped = stripForeignObjects(ensureSvgSize(svg))
   const svgBlob = new Blob([stripped], { type: 'image/svg+xml;charset=utf-8' })
   const url = URL.createObjectURL(svgBlob)

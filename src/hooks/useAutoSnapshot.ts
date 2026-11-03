@@ -4,23 +4,13 @@ import { useDiagramStore } from '../store/diagramStore'
 import { useSettingsStore } from '../store/settingsStore'
 
 /**
- * Otomatik snapshot (geçmişe kayıt) hook.
- *
- * Tetikleyiciler (yalnızca autoSaveEnabled=true iken):
- *   - Ayarlanan idle süresi (autoSaveIdleMs) sonrası
- *   - Window blur: sekme/penceme odağı kaybında
- *   - visibilitychange: sekme gizlenince
- *
- * saveSnapshot zaten diff'li olduğundan, tekrarlı çağrı güvenli.
- *
- * Belge alanları bileşen yerine store aboneliğiyle izlenir; aksi halde
- * App her tuş vuruşunda yeniden render olurdu.
+ * Idle süresi sonrası, pencere blur'unda ve sekme gizlenince geçmişe snapshot alır.
+ * Belge store aboneliğiyle izlenir; bileşen aboneliği App'i her tuş vuruşunda render ettirirdi.
  */
 export function useAutoSnapshot(): void {
   const autoSaveEnabled = useSettingsStore((s) => s.autoSaveEnabled)
   const autoSaveIdleMs = useSettingsStore((s) => s.autoSaveIdleMs)
 
-  // Idle tetikleyici: belge her değiştiğinde sayaç yeniden başlar.
   useEffect(() => {
     if (!autoSaveEnabled) return
     let timer: ReturnType<typeof setTimeout>
@@ -40,7 +30,6 @@ export function useAutoSnapshot(): void {
     }
   }, [autoSaveEnabled, autoSaveIdleMs])
 
-  // Window blur + visibilitychange tetikleyicileri
   useEffect(() => {
     if (!autoSaveEnabled) return
     const save = () => useDiagramStore.getState().saveSnapshot()

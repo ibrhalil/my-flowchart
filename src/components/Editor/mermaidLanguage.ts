@@ -85,7 +85,6 @@ const mermaidStream = StreamLanguage.define<{
         if (KEYWORDS.has(m[1])) {
           return 'keyword'
         }
-        // classDef adı veya düz satır — kelime variable olarak işaretlendi
         return 'variable'
       }
     }
@@ -149,7 +148,6 @@ const mermaidStream = StreamLanguage.define<{
       return 'number'
     }
 
-    // Tanımlayıcı
     if (/[A-Za-z_]/.test(ch)) {
       stream.match(/^[A-Za-z_][\w-]*/)
       return 'variable'
@@ -210,7 +208,6 @@ export function mermaidThemeExtensions(isDark: boolean): ReturnType<typeof synta
       '.cm-selectionBackground, ::selection': {
         backgroundColor: isDark ? 'rgba(255,70,150,0.25)' : 'rgba(0,87,255,0.18)',
       },
-      // Lint diagnostic widget'ları (temaya duyarlı)
       '.cm-diagnostic': {
         backgroundColor: isDark ? '#2d1b45' : '#ffffff',
         color: isDark ? '#f4f0fa' : '#1a1f2e',
@@ -233,13 +230,11 @@ export function mermaidThemeExtensions(isDark: boolean): ReturnType<typeof synta
         color: isDark ? '#f4f0fa' : '#1a1f2e',
         borderColor: isDark ? '#4f3870' : '#d4d0c4',
       },
-      // Lint tooltip (hover'da çıkan kutucuk)
       '.cm-tooltip.cm-tooltip-lint': {
         backgroundColor: isDark ? '#2d1b45' : '#ffffff',
         color: isDark ? '#f4f0fa' : '#1a1f2e',
         borderColor: isDark ? '#3d2856' : '#e5e2da',
       },
-      // Lint gutter işaretçisi
       '.cm-lintMarker': {
         width: '8px',
         height: '8px',

@@ -5,7 +5,6 @@ const MAX_ENTRIES = 50
 
 export interface HistoryUpdate {
   entries: HistoryEntry[]
-  /** Kalıcı depoya yazma başarılı mı? */
   ok: boolean
 }
 

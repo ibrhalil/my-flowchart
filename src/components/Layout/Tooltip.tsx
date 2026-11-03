@@ -6,9 +6,7 @@ import { isTooltipFocusOpenSuppressed } from './tooltipFocus'
 interface TooltipProps {
   label: string
   children: ReactNode
-  /** Tooltip'in çıkacağı yön. Default: top */
   side?: 'top' | 'bottom' | 'left' | 'right'
-  /** Hover gecikmesi (ms). Default: 0 (anında) */
   delay?: number
   className?: string
 }
@@ -87,10 +85,7 @@ export function Tooltip({ label, children, side = 'top', delay = 0, className }:
         onMouseEnter={show}
         onMouseLeave={hide}
         onFocus={() => {
-          // Programatik odak geri dönüşü (Modal kapanışı, fullscreen çıkışı)
-          // kullanıcının tooltip görme niyeti değildir; açılırsa fare dışında
-          // kalıp ekranda takılır. Bastırma penceresi dışındaki (klavye ile
-          // gelen) odaklar tooltip'i normal açar.
+          // Programatik odak geri dönüşü tooltip'i faresiz açıp takılı bırakır (bkz. tooltipFocus).
           if (isTooltipFocusOpenSuppressed()) return
           setOpen(true)
         }}

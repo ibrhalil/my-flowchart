@@ -8,10 +8,6 @@ let initialized: string | null = null
 let renderCounter = 0
 let renderQueue: Promise<void> = Promise.resolve()
 
-/**
- * Mermaid + ELK büyük paketlerdir; ilk ihtiyaç anında yüklenir ki editör
- * arayüzü onları beklemeden açılsın.
- */
 let mermaidPromise: Promise<Mermaid> | null = null
 function loadMermaid(): Promise<Mermaid> {
   mermaidPromise ??= Promise.all([import('mermaid'), import('@mermaid-js/layout-elk')]).then(
@@ -20,14 +16,12 @@ function loadMermaid(): Promise<Mermaid> {
       return mermaid
     },
   )
-  // Yükleme başarısız olursa (ağ hatası) bir sonraki çağrı yeniden denesin.
   mermaidPromise.catch(() => {
     mermaidPromise = null
   })
   return mermaidPromise
 }
 
-// Diyagram teması artık kullanıcı tarafından seçilmiyor; uygulama temasını takip eder.
 const APP_THEME_TO_MERMAID: Record<AppTheme, 'default' | 'dark'> = {
   light: 'default',
   dark: 'dark',
@@ -40,11 +34,8 @@ function baseConfig(theme: AppTheme, htmlLabels: boolean) {
     theme: APP_THEME_TO_MERMAID[theme],
     look: 'classic' as const,
     suppressErrorRendering: true,
-    // htmlLabels:false -> etiketler <foreignObject> yerine <text> olarak üretilir.
-    // Bu, SVG'nin <img> üzerinden canvas'a çizildiğinde canvas'in
-    // kirlenmesini (taint -> toBlob SecurityError) önler; PNG export çalışır.
-    // ELK düzeni yalnızca kök seviyedeki `htmlLabels` anahtarına bakar;
-    // `flowchart.htmlLabels` tek başına yetmez.
+    // <foreignObject> PNG canvas'ını kirletir (taint); htmlLabels:false etiketleri <text> yapar.
+    // ELK yalnızca kök seviyedeki `htmlLabels`'a bakar, `flowchart.htmlLabels` yetmez.
     htmlLabels,
     flowchart: {
       useMaxWidth: false,
@@ -64,10 +55,8 @@ function genId(): string {
 }
 
 /**
- * Mindmap'te metin tabanlı etiketler düğüm içinde ortalanmaz (kök yazısı
- * kayar); bu tür HTML etiketle çizilir ve PNG'de stripForeignObjects devreye girer.
- * Diğer tüm türlerde <text> etiketleri tercih edilir: PNG'ye birebir geçer,
- * sarma ve sınıf renkleri korunur.
+ * Mindmap'te <text> etiketleri düğüm içinde ortalanmaz; yalnızca o tür HTML etiket kullanır
+ * (PNG'de stripForeignObjects devrede). Diğerlerinde <text> sarma ve sınıf renklerini korur.
  */
 const usesHtmlLabels = (code: string): boolean => /^\s*mindmap\b/i.test(diagramBody(code))
 
@@ -89,8 +78,7 @@ async function renderOne(code: string, theme: AppTheme): Promise<string> {
 
   const { svg } = await mermaid.render(genId(), trimmed)
 
-  // Mermaid'in HTML olarak serileştirdiği SVG, XML ayrıştırıcısının kabul
-  // etmediği HTML entity'leri içerebilir. HTML ayrıştırıcısı SVG namespace'ini korur.
+  // XML ayrıştırıcısı mermaid'in HTML entity'lerini reddeder; HTML ayrıştırıcısı SVG namespace'ini korur.
   const doc = new DOMParser().parseFromString(svg, 'text/html')
   const svgEl = doc.querySelector('svg')
   if (!svgEl) {
@@ -98,21 +86,9 @@ async function renderOne(code: string, theme: AppTheme): Promise<string> {
   }
   svgEl.setAttribute('aria-label', rt('preview.mermaidAriaLabel'))
 
-  // Kenar etiketlerinin arka planı yarı saydam olduğu için ("Evet"/"Hayır"
-  // gibi) ELK etiketlerinin altından çizgi görünür. Saydamlık iki katmanlı:
-  // fill değerine gömülü alfa (light tema: rgba(232,232,232,0.8)) ve mermaid'in
-  // id-seçicili CSS kuralı (#mmd-x .edgeLabel rect { opacity: 0.5 }). Kural
-  // yüksek specificity'li olduğundan stylesheet override edilmez; bu yüzden
-  // her rect'e doğrudan inline stil yazıyoruz — inline stil cascade'de her
-  // zaman kazanır ve string SVG'ye gömüldüğü için export'larda da korunır.
-  // Renk, mermaid'in kendi temasından türetilir (alfa kanalı düşürülerek).
-  //
-  // Blok, mermaid'in iç CSS/sınıf adlarına bağımlıdır; sürüm değişikliğinde
-  // bozulabilir. Bu yüzden tamamen savunmacıdır: hata fırlatmaz (try/catch),
-  // yakalanan değer geçerli bir renk değilse yok sayılır, renk hiç
-  // bulunamazsa tema tabanlı sabit renge düşülür, sınıf adları değişirse
-  // döngü boşa döner (görsel stok mermaid görünümüne döner). Hiçbir durumda
-  // render başarısız olmaz.
+  // Kenar etiketi arka planı yarı saydam (fill alfası + #id-seçicili CSS) olduğundan ELK
+  // etiketlerinin altından çizgi görünür. Inline stil cascade'i kazanır ve export'a da taşınır.
+  // Mermaid'in iç CSS/sınıf adlarına bağlı: tamamen savunmacı, hata halinde stok görünüme düşer.
   try {
     const mermaidStyle = svgEl.querySelector('style')?.textContent ?? ''
     const rawFill = (
@@ -120,14 +96,12 @@ async function renderOne(code: string, theme: AppTheme): Promise<string> {
       mermaidStyle.match(/\.edgeLabel\s*\{[^}]*background-color:\s*([^;}]+)/)?.[1] ??
       ''
     ).trim()
-    // Yalnızca tanıdık renk biçimlerini kabul et; tanınmayan metni inline
-    // stil olarak enjekte etme.
+    // Tanınmayan metin inline stile enjekte edilmez.
     const isColor = /^(#[0-9a-f]{3,8}|rgba?\([^)]*\)|hsla?\([^)]*\)|var\([-\w,# ]*\)|[a-z]+)$/i.test(
       rawFill,
     )
     const solidFill = (isColor ? rawFill : '')
-      // rgba(r,g,b,a) -> rgb(r,g,b), hsla(h,s%,l%,a) -> hsl(...), #rrggbbaa -> #rrggbb:
-      // alfa kanallarını düşür, rengi koru.
+      // Alfa kanalını düşür: rgba->rgb, hsla->hsl, #rrggbbaa->#rrggbb
       .replace(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)[^)]*\)/i, 'rgb($1, $2, $3)')
       .replace(/hsla?\(\s*([^,)]+)[,\s]+([^,)]+)[,\s]+([^,)]+)[^)]*\)/i, 'hsl($1, $2, $3)')
       .replace(/^#([0-9a-f]{6})[0-9a-f]{2}$/i, '#$1')
@@ -140,8 +114,6 @@ async function renderOne(code: string, theme: AppTheme): Promise<string> {
     // Post-processing kozmetiktir; hata halinde SVG olduğu gibi kullanılır.
   }
 
-  // svgEl üzerindeki aria-label değişikliğinin serialize edilmiş svg'ye yansıması için
-  // documentElement'i tekrar string'e çeviriyoruz.
   return new XMLSerializer().serializeToString(svgEl)
 }
 
@@ -153,11 +125,6 @@ export function renderMermaid(code: string, theme: AppTheme): Promise<string> {
   return result
 }
 
-/**
- * Kaynağın Mermaid tarafından ayrıştırılabilir olup olmadığını söyler.
- * Otomatik düzeltme gibi kaynak metni değiştiren işlemlerin sonucunu
- * uygulamadan önce güvenlik kontrolü olarak kullanılır.
- */
 export async function canParse(code: string): Promise<boolean> {
   const trimmed = code.trim()
   if (!trimmed) return true

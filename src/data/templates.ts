@@ -218,7 +218,6 @@ export const TEMPLATES: TemplateEntry[] = [
       İzleme`,
   },
 
-  // --- Pratik senaryolar ---
   {
     id: 'tpl-flow-auth',
     type: 'flowchart',
@@ -378,7 +377,6 @@ export const TEMPLATES: TemplateEntry[] = [
     }`,
   },
 
-  // --- Yeni Mermaid türleri ---
   {
     id: 'tpl-timeline',
     type: 'timeline',

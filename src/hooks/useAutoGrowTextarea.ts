@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
 
-/**
- * `<textarea>` içeriğine göre yüksekliğini otomatik ayarlar.
- * Maksimum yükseklik aşıldığında kaydırma çubuğu devreye girer.
- */
 export function useAutoGrowTextarea(maxHeightPx = 96) {
   const ref = useRef<HTMLTextAreaElement | null>(null)
 

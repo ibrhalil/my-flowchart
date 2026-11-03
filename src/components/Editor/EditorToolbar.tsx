@@ -16,7 +16,6 @@ export function EditorToolbar() {
   const { ref: descRef, resize: resizeDesc } = useAutoGrowTextarea(500)
   const { t } = useTranslation()
 
-  // Şablon/içe aktarma gibi dış kaynaklı açıklama değişimlerinde textarea'yı boyutlandır.
   useEffect(() => {
     resizeDesc()
   }, [resizeDesc, description])

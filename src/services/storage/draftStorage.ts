@@ -32,7 +32,6 @@ export function saveDraft(
     )
     return true
   } catch {
-    // Kota dolu / depolama kapalı olabilir — çağıran taraf hata durumunu bilir.
     return false
   }
 }

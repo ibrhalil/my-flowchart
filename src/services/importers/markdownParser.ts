@@ -4,13 +4,10 @@ export interface ParsedMarkdown {
   mermaidBlocks: string[]
 }
 
-/** Frontmatter: dosyanın başında `---` ... `---` bloğu (CRLF toleranslı). */
 const FRONTMATTER_RE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/
 
-/** Kod çiti satırı: ``` veya ~~~ (3+ tekrar) + opsiyonel bilgi dizesi. */
 const FENCE_RE = /^(\s*)(`{3,}|~{3,})(.*)$/
 
-/** JSON biçiminde yazılmış frontmatter değerini çözer; değilse olduğu gibi döner. */
 function decodeValue(raw: string): string {
   const v = raw.trim()
   if (v.length >= 2 && v.startsWith('"') && v.endsWith('"')) {
@@ -38,7 +35,6 @@ function parseFrontmatter(input: string): { title?: string; description?: string
   return { title: get('title'), description: get('description') }
 }
 
-/** Tüm mermaid kod çitlerini (``` ve ~~~ varyantları) yapısal olarak toplar. */
 function collectMermaidBlocks(input: string): string[] {
   const blocks: string[] = []
   const lines = input.split(/\r?\n/)

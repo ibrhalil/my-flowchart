@@ -52,10 +52,6 @@ export function translate(
 
 export const LOCALE_STORAGE_KEY = 'my-flowchart-locale'
 
-/**
- * Tarayıcı dil tercihlerinden (öncelik sırasıyla) desteklenen ilkini seçer;
- * hiçbiri desteklenmiyorsa İngilizce.
- */
 export function detectBrowserLocale(): Locale {
   const languages = navigator.languages?.length ? navigator.languages : [navigator.language]
   for (const lang of languages) {
@@ -65,10 +61,7 @@ export function detectBrowserLocale(): Locale {
   return 'en'
 }
 
-/**
- * Kullanıcının kayıtlı dil seçimi varsa o, yoksa tarayıcı dili.
- * Depolama kapalı/engelliyse (gizli mod, çerez engeli) uygulama açılışı düşmesin.
- */
+/** Kayıtlı seçim yoksa tarayıcı dili; depolama engelliyse açılış düşmemeli. */
 export function readStoredLocale(): Locale {
   try {
     const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY)

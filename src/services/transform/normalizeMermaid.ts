@@ -1,26 +1,7 @@
 /**
- * Mermaid flowchart/graph kaynak kodunu ASCII/boşluk açısından güvenli hale getirir.
- *
- * Dönüşümler:
- *   1. Etiketli okları `-->|"etiket"|` post-label formatına indirger:
- *        A -- Evet --> B     →   A -->|"Evet"| B
- *        A -. metin .-> B    →   A -.->|"metin"| B
- *        A == metin ==> B    →   A ==>|"metin"| B
- *   2. Etiket/şekil dışındaki ASCII dışı veya boşluklu düz kimlikleri
- *      benzersiz n1, n2, ... kimliklerine çevirir ve orijinal metni label'a taşır:
- *        Başlangıç --> Bitiş   →   n1[Başlangıç] --> n2[Bitiş]
- *
- * Güvenlik kuralları (geçerli sözdizimi asla bozulmaz):
- *   - Çift tırnak içindeki içerik hiçbir zaman ok/kimlik sayılmaz.
- *   - `;` ile ayrılan ifadeler tek tek işlenir; `&` ile birleşen düğümler
- *     ayrı ayrı normalize edilir (örn. `A & B --> C` korunur).
- *   - Satır sonundaki `%%` yorumları ve YAML frontmatter dokunulmaz kalır.
- *   - Tanınmayan satırlar (subgraph, classDef, linkStyle, ...) olduğu gibi
- *     korunur; yalnızca style/class/click satırlarındaki kimlik referansları
- *     rename haritasıyla güncellenir.
- *   - `%%{ ... }%%` direktif blokları çok satırlı olarak atlanır.
- *
- * Diğer diyagram türlerine (sequence, class, gantt, vb.) dokunulmaz.
+ * Flowchart/graph kaynağını ASCII-güvenli hale getirir: etiketli okları `-->|"etiket"|`
+ * biçimine çevirir, ASCII dışı/boşluklu kimlikleri n1, n2… kimliklerine taşır.
+ * Diğer diyagram türlerine, tırnak içeriğine, `%%` yorumlarına ve frontmatter'a dokunmaz.
  */
 
 import { FRONTMATTER_RE, diagramBody } from './diagramBody'
@@ -30,13 +11,10 @@ const DIRECTIVE_RE =
 
 const VALID_ASCII_ID_RE = /^[A-Za-z_][A-Za-z0-9_-]*$/
 
-/** Kimlik + opsiyonel şekil ayrımı için ilk şekil başlangıç karakteri */
 const SHAPE_START_RE = /[[({<"]/
 
-/** Hiç harf/rakam içermeyen parçalar (ok kalıntıları, noktalama) dokunulmaz */
 const HAS_WORD_CHAR_RE = /[A-Za-z0-9_\p{L}\p{N}]/u
 
-/** Etiketli ok kuralları: `-- etiket -->` biçimlerini post-label'a çevirir. */
 interface LabeledEdgeRule {
   re: RegExp
   render: (m: RegExpMatchArray) => string
@@ -64,22 +42,15 @@ const LABELED_EDGE_RULES: LabeledEdgeRule[] = [
 const ARROW_AT =
   /^(\s*)(--->|===>|-.->|<-->|--o|--x|o--|x--|-->|---|===|~~~|-.-|==>|-\.|--|==)(\s*)(\|[^|\n]*\|)?(\s*)/
 
-
 export interface NormalizeReport {
   code: string
-  /** Yeniden adlandırılan kimlik sayısı */
   renamed: number
-  /** Tırnak içine alınan ok-etiketi sayısı */
   quoted: number
   /** İşlem yapılmadıysa true (zaten güvenli veya flowchart değil) */
   unchanged: boolean
 }
 
-/**
- * Belge bir flowchart/graph mı? Yalnızca ilk anlamlı satıra bakılır
- * (frontmatter, `%%{…}%%` direktifleri ve `%%` yorumları atlanır); böylece
- * başka türlerde "Graph database" gibi bir satır yanlış alarm üretmez.
- */
+/** Yalnızca ilk anlamlı satıra bakar; başka türlerdeki "Graph database" gibi satırlar yanlış alarm vermez. */
 export function isFlowchartLike(code: string): boolean {
   return /^\s*(flowchart|graph)\b/i.test(diagramBody(code))
 }
@@ -103,7 +74,6 @@ function genId(ctx: NormalizeContext): string {
   }
 }
 
-/** Çift tırnak dışındaki `;` ayraçlarını bölerek ifadeleri ayırır. */
 function splitStatements(line: string): string[] {
   const parts: string[] = []
   let buf = ''
@@ -124,7 +94,6 @@ function splitStatements(line: string): string[] {
   return parts
 }
 
-/** Satırdaki ilk `%%` yorumunun (tırnak dışı) indeksini bulur. */
 function findCommentIndex(line: string): number {
   let inQuote = false
   for (let i = 0; i < line.length; i += 1) {
@@ -135,7 +104,6 @@ function findCommentIndex(line: string): number {
   return -1
 }
 
-/** Çift tırnak dışındaki `&` ayraçlarıyla düğüm listesini böler. */
 function splitAmp(seg: string): string[] {
   const parts: string[] = []
   let buf = ''
@@ -164,7 +132,6 @@ function normalizeNodeSegment(seg: string, ctx: NormalizeContext): string {
   const core = seg.slice(lead.length, seg.length - trail.length)
   if (!core) return seg
 
-  // ID + opsiyonel şekil ayrıştırması
   const shapeIdx = core.search(SHAPE_START_RE)
   let idPart: string
   let shapePart: string
@@ -181,16 +148,13 @@ function normalizeNodeSegment(seg: string, ctx: NormalizeContext): string {
   const realId = colonIdx === -1 ? idPart : idPart.slice(0, colonIdx)
   const classSuffix = colonIdx === -1 ? '' : idPart.slice(colonIdx)
 
-  // Boş kimlik → normalize etme
   if (!realId.trim()) return seg
 
-  // Geçerli ASCII kimlik → hiç dokunma
   if (VALID_ASCII_ID_RE.test(realId)) return seg
 
   // Harf/rakam içermeyen parça (ok kalıntısı, noktalama) → dokunma
   if (!HAS_WORD_CHAR_RE.test(realId)) return seg
 
-  // ASCII dışı karakter veya boşluk içeriyor → rename
   let newId = ctx.renameMap.get(realId)
   if (!newId) {
     newId = genId(ctx)
@@ -199,10 +163,8 @@ function normalizeNodeSegment(seg: string, ctx: NormalizeContext): string {
   ctx.renamed += 1
 
   if (shapePart) {
-    // Şekil zaten var → yalnızca kimliği rename et, etiket korunur
     return `${lead}${newId}${classSuffix}${shapePart}${trail}`
   }
-  // Şekil yok → orijinal metni label yap
   return `${lead}${newId}[${realId}]${classSuffix}${trail}`
 }
 
@@ -277,10 +239,6 @@ function normalizeFlowLine(line: string, ctx: NormalizeContext): string {
   return processed + tail
 }
 
-/**
- * style/class/click satırlarındaki kimlik referanslarını rename haritasıyla günceller.
- * Diğer direktif satırları (subgraph, classDef, linkStyle, ...) dokunulmaz kalır.
- */
 function applyRenamesToDirective(line: string, map: Map<string, string>): string {
   if (map.size === 0) return line
   const st = line.match(/^(\s*)(style|click)\s+(\S+)([\s\S]*)$/i)
@@ -342,8 +300,6 @@ export function normalizeMermaid(input: string): NormalizeReport {
   let inDirective = false
 
   for (const line of lines) {
-    // %%{ ... }%% direktif bloğu çok satırlı olabilir; içindeki
-    // tüm satırları (}%% kapanışı dahil) olduğu gibi bırak.
     if (inDirective) {
       if (/\}%%/.test(line)) inDirective = false
       processed.push(line)
@@ -365,8 +321,7 @@ export function normalizeMermaid(input: string): NormalizeReport {
     isDirective.push(false)
   }
 
-  // Rename'ler belgenin sonrasında keşfedilmiş olabilir; direktif
-  // satırlarındaki referansları ikinci geçişte güncelle.
+  // Rename'ler belgenin sonunda keşfedilmiş olabilir: direktif referansları ikinci geçişte güncellenir.
   const out = lines.map((_line, idx) =>
     isDirective[idx] ? applyRenamesToDirective(processed[idx], ctx.renameMap) : processed[idx],
   )

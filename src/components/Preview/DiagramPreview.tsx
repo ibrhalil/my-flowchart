@@ -31,10 +31,8 @@ const MIN_ZOOM = 0.1
 const MAX_ZOOM = 10
 // p-8 (32px) + p-6 (24px) her iki yanda -> toplam iç boşluk
 const FIT_PAD = 56
-// Bu oranın üzerindeki SVG boyut değişimi auto-fit'i yeniden tetikler
 const FIT_REFIT_THRESHOLD = 0.15
 
-/** Başarıyla render edilmiş diyagram + hangi kaynak/tema sürümünden geldiği */
 interface RenderResult {
   svg: string
   code: string
@@ -94,8 +92,7 @@ export function DiagramPreview() {
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null)
   const prevFitSizeRef = useRef<{ w: number; h: number } | null>(null)
-  // Kullanıcı zoom/pan'e dokunmadığı sürece görünüm pencereye otomatik sığdırılır.
-  // El ile değiştirdikten sonra yeniden boyutlandırma / sekme değişimi onu ezmez.
+  // Kullanıcı zoom/pan'e dokunmadıkça görünüm pencereye otomatik sığdırılır.
   const autoFitRef = useRef(true)
 
   const project = useMemo(
@@ -122,8 +119,7 @@ export function DiagramPreview() {
       .catch((err) => {
         console.error('Mermaid diagram rendering failed:', err)
         if (cancelled) return
-        // Son geçerli diyagram silinmez: yazarken oluşan geçici söz dizimi
-        // hataları görünümü (zoom/pan) ve diyagramı sıfırlamasın.
+        // Son geçerli diyagram kalır: geçici söz dizimi hataları görünümü sıfırlamasın.
         setError(parseError(err))
       })
       .finally(() => {
@@ -162,7 +158,6 @@ export function DiagramPreview() {
     setPan({ x: 0, y: 0 })
   }, [computeFitZoom])
 
-  // Pencere/panel boyutu değişince yalnızca kullanıcı görünümü elle değiştirmediyse yeniden sığdır.
   const refitIfAuto = useCallback(() => {
     if (autoFitRef.current) applyFit()
   }, [applyFit])
@@ -179,8 +174,7 @@ export function DiagramPreview() {
     setPan({ x: 0, y: 0 })
   }, [])
 
-  // İlk render'da veya SVG boyutu belirgin şekilde değiştiğinde pencereye sığdır.
-  // Küçük edit değişiklikleri (eşik altı) mevcut zoom'u korur.
+  // İlk render'da ya da SVG boyutu belirgin değişince sığdır; küçük edit'ler zoom'u korur.
   useEffect(() => {
     if (!svgSize) {
       prevFitSizeRef.current = null
@@ -241,9 +235,7 @@ export function DiagramPreview() {
     }
   }, [setToast, t])
 
-  // Pan + pinch: Pointer Events (fare + dokunmatik + kalem).
-  // `touch-action: none` sayesinde tarayıcının sayfa kaydırması/pinch'i engellenir
-  // ve biz olayları kendimiz yönetiriz.
+  // Pointer Events (fare/dokunmatik/kalem); `touch-action: none` tarayıcının kaydırma/pinch'ini kapatır.
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = scrollRef.current
     if (!el) return
@@ -302,7 +294,6 @@ export function DiagramPreview() {
       if (!e.ctrlKey && !e.metaKey) return
       e.preventDefault()
       autoFitRef.current = false
-      // Mevcut zoom'a orantılı adım; yüksek zoomlarda daha doğal his.
       setZoom((z) => clampZoom(+(z * (e.deltaY < 0 ? 1.12 : 0.88)).toFixed(3)))
     }
     scroller.addEventListener('wheel', onWheel, { passive: false })
@@ -312,7 +303,6 @@ export function DiagramPreview() {
   const [exportingPng, setExportingPng] = useState(false)
 
   const handleExportPng = async () => {
-    // Yalnızca güncel render'ı dışa aktar; bayat SVG'yi indirme.
     if (!render || !imagesFresh || exportingPng) return
     setExportingPng(true)
     try {
@@ -434,7 +424,6 @@ export function DiagramPreview() {
           ) : null}
         </div>
 
-        {/* Hata kartı ve durum bildirimleri zoom/pan dönüşümünden bağımsızdır. */}
         {error ? (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
             <div className="pointer-events-auto flex max-w-md flex-col items-center gap-3 rounded-xl border border-danger/50 bg-danger-soft p-6 text-center text-text shadow-lg">
@@ -519,7 +508,6 @@ function Toolbar(props: ToolbarProps) {
 
   const closeAllMenus = () => setExportMenu(false)
 
-  // Menü açıkken Escape ile kapat ve odağı düğmeye geri ver.
   useEffect(() => {
     if (!exportMenu) return
     const onKey = (e: KeyboardEvent) => {
@@ -536,7 +524,6 @@ function Toolbar(props: ToolbarProps) {
 
   return (
     <div className="@container flex items-center gap-1 border-b border-border bg-bg-surface px-3 py-2">
-      {/* Tam ekran — en solda */}
       <IconButton
         label={props.isFullscreen ? t('preview.exitFullscreen') : t('preview.fullscreen')}
         onClick={props.onToggleFullscreen}
@@ -544,7 +531,6 @@ function Toolbar(props: ToolbarProps) {
         {props.isFullscreen ? <Minimize /> : <Maximize />}
       </IconButton>
 
-      {/* Zoom grubu */}
       <IconButton label={t('preview.zoomOut')} onClick={props.zoomOut} disabled={props.zoom <= MIN_ZOOM}>
         <ZoomOut />
       </IconButton>
@@ -567,7 +553,6 @@ function Toolbar(props: ToolbarProps) {
       <div className="mx-0.5 h-5 w-px bg-border" />
 
       <div className="relative ml-auto flex items-center gap-1.5">
-        {/* İçe aktar */}
         <IconButton
           label={t('preview.importTooltip')}
           side="bottom"
@@ -581,8 +566,6 @@ function Toolbar(props: ToolbarProps) {
           )}
         </IconButton>
 
-        {/* Dışa aktar — kaynak formatları her zaman erişilebilir; görsel
-            formatlar yalnızca güncel render varken etkindir. */}
         <IconButton
           ref={exportBtnRef}
           label={t('preview.exportTooltip')}

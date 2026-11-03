@@ -5,13 +5,11 @@ import { useTranslation } from '../../lib/i18n'
 interface SplitPaneProps {
   left: React.ReactNode
   right: React.ReactNode
-  /** Sol panelin başlangıç yüzdesi */
   initialLeft?: number
   minLeft?: number
   maxLeft?: number
 }
 
-/** Panellerin piksel cinsinden kullanılabilir alt sınırları */
 const MIN_LEFT_PX = 260
 const MIN_RIGHT_PX = 300
 
@@ -60,9 +58,7 @@ export function SplitPane({
     [clampPct],
   )
 
-  // Pointer Events: fare + dokunmatik + kalem tek API altında.
-  // Ayraç üzerine pointer capture alınır, böylece sürükleme ayracın dışına çıksa
-  // bile takip edilir ve sayfa kaydırması `touch-action: none` ile engellenir.
+  // Ayraçta pointer capture: sürükleme ayracın dışına çıksa da izlenir; `touch-action: none` sayfa kaydırmasını engeller.
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       const sep = separatorRef.current
@@ -92,7 +88,6 @@ export function SplitPane({
     [],
   )
 
-  // Klavye ile boyutlandırma: ayraç odaklanabilir bir separator'dır.
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       const step = e.shiftKey ? 5 : 2

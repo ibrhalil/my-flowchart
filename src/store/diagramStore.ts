@@ -7,7 +7,6 @@ import { useSettingsStore } from './settingsStore'
 import * as draftStorage from '../services/storage/draftStorage'
 import * as history from '../services/storage/localHistory'
 
-/** Taslak (draft) kalıcılık durumu — arayüz göstergesi için */
 export type DraftSaveState = 'saved' | 'pending' | 'error'
 
 export interface DiagramState {
@@ -17,11 +16,9 @@ export interface DiagramState {
   updatedAt: number
 
   history: HistoryEntry[]
-  /** Kullanıcıya gösterilecek kısa süreli bildirim */
   toast: string | null
-  /** Kullanıcı düzenlemesi yapıldı mı? (dış yükleme sonrası false; history kararı içindir, persist edilmez) */
+  /** Kullanıcı düzenlemesi yapıldı mı? Dış yüklemeden sonra false; history kararı içindir, persist edilmez. */
   dirty: boolean
-  /** Taslağın tarayıcı deposuna yazılma durumu */
   draftState: DraftSaveState
 
   setTitle: (t: string) => void
@@ -66,10 +63,7 @@ function bootstrap(): Pick<DiagramState, 'title' | 'description' | 'code' | 'upd
 
 const initial = bootstrap()
 
-/**
- * Kaydedilmemiş düzenleme varsa geçmişe checkpoint alır. Yazma başarısız olursa
- * true döner; çağıran, kullanıcıyı yedeğin alınamadığı konusunda uyarmalıdır.
- */
+/** Kaydedilmemiş düzenlemeyi geçmişe alır; yazma başarısızsa true döner. */
 function backupDirtyState(get: () => DiagramState): boolean {
   if (!get().dirty) return false
   get().saveSnapshot()
@@ -102,9 +96,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       }
     }
 
-    // Şablon/içe aktarma gibi dış yüklemeden önce, kullanıcı düzenleme yaptıysa
-    // mevcut durumu history'ye kaydet (düzenleme kaybolmasın). Şablonun kendisi
-    // history'ye yazılmaz (aşağıda dirty:false).
+    // Kullanıcı düzenlemesi kaybolmasın diye mevcut durum önce geçmişe alınır.
     const backupFailed = backupDirtyState(get)
 
     // Yeni belge, önceki belgenin başlığını/açıklamasını miras almaz.
@@ -124,11 +116,8 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
   saveSnapshot: () => {
     const s = get()
-    // Sadece kullanıcı düzenlemesi yapılmışsa kaydet (şablon geçişi gibi dış
-    // yüklemeler kaydedilmez).
     if (!s.dirty) return
     const last = s.history[0]
-    // Son snapshot ile aynıysa (code + title + description) tekrar kaydetme
     if (
       last &&
       last.code === s.code &&
@@ -151,7 +140,6 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       set({ toast: rt('toasts.saveFailed') })
       return
     }
-    // Başarılı otomatik kayıt sessizdir; yalnızca hata bildirilir.
     set({ history: res.entries, dirty: false })
   },
 
@@ -175,8 +163,6 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     const s = get()
     const entry = s.history.find((e) => e.id === id)
     if (!entry) return
-    // Geri yükleme mevcut belgeyi ezer; kaydedilmemiş düzenleme varsa
-    // önce history'ye checkpoint al.
     const backupFailed = backupDirtyState(get)
     set({
       code: entry.code,
@@ -191,10 +177,6 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     })
   },
 }))
-
-/* ------------------------------------------------------------------ */
-/*  Taslak (draft) kalıcılığı                                          */
-/* ------------------------------------------------------------------ */
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -217,7 +199,6 @@ function writeDraftNow(): void {
   }
 }
 
-/** Bekleyen taslak kaydını beklemeden hemen yazar (sayfa kapanışı vb.). */
 export function flushDraft(): void {
   if (saveTimer) {
     clearTimeout(saveTimer)
@@ -244,7 +225,6 @@ useDiagramStore.subscribe((s, prev) => {
   saveTimer = setTimeout(writeDraftNow, 800)
 })
 
-// Sekme gizlenince / sayfa kapanınca 800 ms'lik pencereyi beklemeden kaydet.
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', flushDraft)
   document.addEventListener('visibilitychange', () => {

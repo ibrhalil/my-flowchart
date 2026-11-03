@@ -22,17 +22,12 @@ export type AppTheme = 'light' | 'dark'
 export type Locale = 'en' | 'tr'
 
 export interface ProjectFile {
-  /** Markdown başlığı / doküman başlığı */
   title: string
   /** Kısa açıklama; `.md` çıktısının üstünde gösterilir */
   description?: string
-  /** Mermaid kaynak kodu */
   code: string
-  /** Tema */
   theme: AppTheme
-  /** PNG export için ölçek (1, 2, 3) */
   pngScale: number
-  /** Oluşturulma / güncellenme zaman damgası (ms) */
   updatedAt: number
 }
 
