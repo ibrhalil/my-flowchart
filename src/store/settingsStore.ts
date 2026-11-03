@@ -25,11 +25,8 @@ type SettingsPatch = Pick<
 >
 
 export const DEFAULT_SETTINGS: SettingsPatch = {
-  theme:
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light',
+  // Sistem temasına bakılmaz: herkes açık temayla başlar, koyu tema isteğe bağlıdır.
+  theme: 'light',
   pngScale: 2,
   editorFontSize: 13,
   autoSaveEnabled: true,

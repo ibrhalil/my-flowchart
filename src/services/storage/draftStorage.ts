@@ -17,7 +17,9 @@ export function loadDraft(): Partial<ProjectFile> | null {
 }
 
 /** Taslağı yazar. Depolama yazılamazsa false döner (sessizce yutulmaz). */
-export function saveDraft(project: ProjectFile): boolean {
+export function saveDraft(
+  project: Pick<ProjectFile, 'title' | 'description' | 'code' | 'updatedAt'>,
+): boolean {
   try {
     localStorage.setItem(
       DRAFT_KEY,
@@ -25,8 +27,6 @@ export function saveDraft(project: ProjectFile): boolean {
         title: project.title,
         description: project.description,
         code: project.code,
-        theme: project.theme,
-        pngScale: project.pngScale,
         updatedAt: project.updatedAt,
       }),
     )

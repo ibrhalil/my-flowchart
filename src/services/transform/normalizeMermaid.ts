@@ -23,6 +23,8 @@
  * Diğer diyagram türlerine (sequence, class, gantt, vb.) dokunulmaz.
  */
 
+import { FRONTMATTER_RE, diagramBody } from './diagramBody'
+
 const DIRECTIVE_RE =
   /^(%%|subgraph\b|end\b|classDef\b|class\b|linkStyle\b|style\b|click\b|direction\b|graph\b|flowchart\b)/i
 
@@ -62,7 +64,6 @@ const LABELED_EDGE_RULES: LabeledEdgeRule[] = [
 const ARROW_AT =
   /^(\s*)(--->|===>|-.->|<-->|--o|--x|o--|x--|-->|---|===|~~~|-.-|==>|-\.|--|==)(\s*)(\|[^|\n]*\|)?(\s*)/
 
-const FRONTMATTER_RE = /^---[ \t]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/
 
 export interface NormalizeReport {
   code: string
@@ -74,8 +75,13 @@ export interface NormalizeReport {
   unchanged: boolean
 }
 
+/**
+ * Belge bir flowchart/graph mı? Yalnızca ilk anlamlı satıra bakılır
+ * (frontmatter, `%%{…}%%` direktifleri ve `%%` yorumları atlanır); böylece
+ * başka türlerde "Graph database" gibi bir satır yanlış alarm üretmez.
+ */
 export function isFlowchartLike(code: string): boolean {
-  return /(^|\n)\s*(flowchart|graph)\b/im.test(code)
+  return /^\s*(flowchart|graph)\b/i.test(diagramBody(code))
 }
 
 interface NormalizeContext {

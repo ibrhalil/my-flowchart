@@ -1,6 +1,6 @@
 # My Flowchart
 
-> Tarayıcıda çalışan, **çevrimdışı** ve **sunucusuz** Mermaid diyagram editörü.
+> Tarayıcıda çalışan, **sunucusuz** Mermaid diyagram editörü.
 > Yaz, canlı önizle, dışa aktar. Hiçbir veri cihazından çıkmaz.
 
 [![CI](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml)
@@ -14,7 +14,7 @@ My Flowchart, [Mermaid](https://mermaid.js.org/) sözdizimiyle akış şemaları
 
 - **Canlı önizleme** — yazdıkça diyagram anında güncellenir
 - **17+ diyagram türü** — flowchart, sequence, class, state, ER, gantt, pie, journey, git, mindmap, timeline, quadrant, requirement, architecture, xychart, block, kanban
-- **26 hazır şablon** ile hızlı başlangıç
+- **24 hazır şablon** ile hızlı başlangıç
 - **5 formatta dışa aktarım** — PNG, SVG, Markdown, `.mmd`, JSON
 - **İçe aktarım** — `.mmd`, `.json` ve `.md` (frontmatter + kod bloğu) dosyaları
 - **Otomatik taslak kaydı** + **geçmiş anlık görüntüleri** (tarayıcı deposunda)
@@ -22,13 +22,13 @@ My Flowchart, [Mermaid](https://mermaid.js.org/) sözdizimiyle akış şemaları
 - **Zoom / pan / tam ekran** ve ekrana sığdır
 - **Açık & koyu tema**, TR / EN dil seçenekleri
 - CodeMirror 6 tabanlı editör (katlama, arama, satır numaraları)
-- **Çevrimdışı çalışır** — yükledikten sonra internet bağlantısı gerekmez
+- **Verin cihazında kalır** — diyagramlar yalnızca tarayıcı deposunda tutulur, sunucuya gönderilmez (sayfa açıkken internet gerekmez; yeniden yüklemek için gerekir)
 
 ---
 
 ## Hızlı Başlangıç (Geliştirme)
 
-Gereksinimler: [Node.js](https://nodejs.org/) 18+ ve npm.
+Gereksinimler: [Node.js](https://nodejs.org/) 20.19+ (ya da 22.12+) ve npm.
 
 ```bash
 # Bağımlılıkları kur

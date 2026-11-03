@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 import { DEFAULT_TEMPLATE } from '../data/templates'
 import type { HistoryEntry, AppTheme } from '../types/project'
-import { rt } from '../lib/i18nRuntime'
+import { rt, getRuntimeLocale } from '../lib/i18nRuntime'
 import { useSettingsStore } from './settingsStore'
 import * as draftStorage from '../services/storage/draftStorage'
 import * as history from '../services/storage/localHistory'
@@ -55,15 +55,26 @@ function bootstrap(): Pick<DiagramState, 'title' | 'description' | 'code' | 'upd
       updatedAt: draft.updatedAt ?? Date.now(),
     }
   }
+  const en = getRuntimeLocale() === 'en'
   return {
-    title: DEFAULT_TEMPLATE.title,
-    description: DEFAULT_TEMPLATE.description,
+    title: (en && DEFAULT_TEMPLATE.titleEn) || DEFAULT_TEMPLATE.title,
+    description: (en && DEFAULT_TEMPLATE.descriptionEn) || DEFAULT_TEMPLATE.description,
     code: DEFAULT_TEMPLATE.code,
     updatedAt: Date.now(),
   }
 }
 
 const initial = bootstrap()
+
+/**
+ * Kaydedilmemiş düzenleme varsa geçmişe checkpoint alır. Yazma başarısız olursa
+ * true döner; çağıran, kullanıcıyı yedeğin alınamadığı konusunda uyarmalıdır.
+ */
+function backupDirtyState(get: () => DiagramState): boolean {
+  if (!get().dirty) return false
+  get().saveSnapshot()
+  return get().dirty
+}
 
 export const useDiagramStore = create<DiagramState>((set, get) => ({
   title: initial.title,
@@ -94,15 +105,16 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     // Şablon/içe aktarma gibi dış yüklemeden önce, kullanıcı düzenleme yaptıysa
     // mevcut durumu history'ye kaydet (düzenleme kaybolmasın). Şablonun kendisi
     // history'ye yazılmaz (aşağıda dirty:false).
-    if (get().dirty) get().saveSnapshot()
+    const backupFailed = backupDirtyState(get)
 
+    // Yeni belge, önceki belgenin başlığını/açıklamasını miras almaz.
     set({
       code: p.code,
-      title: p.title ?? get().title,
-      description: p.description ?? get().description,
+      title: p.title ?? rt('defaultTitle'),
+      description: p.description ?? '',
       updatedAt: Date.now(),
       dirty: false,
-      toast: rt('toasts.loaded'),
+      toast: rt(backupFailed ? 'toasts.loadedNotBackedUp' : 'toasts.loaded'),
     })
   },
 
@@ -127,7 +139,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       return
     }
     const entry: HistoryEntry = {
-      id: `h-${Date.now().toString(36)}`,
+      id: `h-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
       title: s.title,
       description: s.description,
       code: s.code,
@@ -139,7 +151,8 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       set({ toast: rt('toasts.saveFailed') })
       return
     }
-    set({ history: res.entries, dirty: false, toast: rt('toasts.autosaved') })
+    // Başarılı otomatik kayıt sessizdir; yalnızca hata bildirilir.
+    set({ history: res.entries, dirty: false })
   },
 
   removeHistory: (id) => {
@@ -164,7 +177,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     if (!entry) return
     // Geri yükleme mevcut belgeyi ezer; kaydedilmemiş düzenleme varsa
     // önce history'ye checkpoint al.
-    if (s.dirty) s.saveSnapshot()
+    const backupFailed = backupDirtyState(get)
     set({
       code: entry.code,
       title: entry.title,
@@ -172,7 +185,9 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       description: entry.description ?? s.description,
       updatedAt: Date.now(),
       dirty: false,
-      toast: rt('preview.restored', { title: entry.title }),
+      toast: backupFailed
+        ? rt('toasts.loadedNotBackedUp')
+        : rt('preview.restored', { title: entry.title }),
     })
   },
 }))
@@ -189,13 +204,10 @@ function writeDraftNow(): void {
     saveTimer = null
   }
   const s = useDiagramStore.getState()
-  const { theme, pngScale } = useSettingsStore.getState()
   const ok = draftStorage.saveDraft({
     title: s.title,
     description: s.description,
     code: s.code,
-    theme,
-    pngScale,
     updatedAt: s.updatedAt,
   })
   const wasError = s.draftState === 'error'

@@ -15,7 +15,8 @@ server {
     gzip_types text/plain text/css text/javascript application/javascript application/json image/svg+xml application/xml;
 
     # Statik varlıklar: uzun süreli önbellek (Vite hash'lenmiş dosya adları kullanır)
-    location /assets/ {
+    # `^~`: aşağıdaki uzantı regex'i /assets/ altındaki .svg/.png dosyalarını ezmesin.
+    location ^~ /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
         try_files $uri =404;

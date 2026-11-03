@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
 import { useDiagramStore } from '../store/diagramStore'
 import { useSettingsStore } from '../store/settingsStore'
@@ -12,42 +12,45 @@ import { useSettingsStore } from '../store/settingsStore'
  *   - visibilitychange: sekme gizlenince
  *
  * saveSnapshot zaten diff'li olduğundan, tekrarlı çağrı güvenli.
+ *
+ * Belge alanları bileşen yerine store aboneliğiyle izlenir; aksi halde
+ * App her tuş vuruşunda yeniden render olurdu.
  */
 export function useAutoSnapshot(): void {
-  const code = useDiagramStore((s) => s.code)
-  const title = useDiagramStore((s) => s.title)
-  const description = useDiagramStore((s) => s.description)
-  const saveSnapshot = useDiagramStore((s) => s.saveSnapshot)
-
   const autoSaveEnabled = useSettingsStore((s) => s.autoSaveEnabled)
   const autoSaveIdleMs = useSettingsStore((s) => s.autoSaveIdleMs)
 
-  const saveRef = useRef(saveSnapshot)
-
-  useEffect(() => {
-    saveRef.current = saveSnapshot
-  }, [saveSnapshot])
-
-  // Idle tetikleyici
+  // Idle tetikleyici: belge her değiştiğinde sayaç yeniden başlar.
   useEffect(() => {
     if (!autoSaveEnabled) return
-    const t = setTimeout(() => {
-      saveRef.current()
-    }, autoSaveIdleMs)
-    return () => clearTimeout(t)
-  }, [code, title, description, autoSaveEnabled, autoSaveIdleMs])
+    let timer: ReturnType<typeof setTimeout>
+    const schedule = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => useDiagramStore.getState().saveSnapshot(), autoSaveIdleMs)
+    }
+    schedule()
+    const unsubscribe = useDiagramStore.subscribe((s, prev) => {
+      if (s.code !== prev.code || s.title !== prev.title || s.description !== prev.description) {
+        schedule()
+      }
+    })
+    return () => {
+      clearTimeout(timer)
+      unsubscribe()
+    }
+  }, [autoSaveEnabled, autoSaveIdleMs])
 
   // Window blur + visibilitychange tetikleyicileri
   useEffect(() => {
     if (!autoSaveEnabled) return
-    const onBlur = () => saveRef.current()
+    const save = () => useDiagramStore.getState().saveSnapshot()
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') saveRef.current()
+      if (document.visibilityState === 'hidden') save()
     }
-    window.addEventListener('blur', onBlur)
+    window.addEventListener('blur', save)
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
-      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('blur', save)
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [autoSaveEnabled])

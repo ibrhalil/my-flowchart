@@ -181,9 +181,13 @@ export const tr = {
   },
   toasts: {
     loaded: 'Yüklendi.',
-    autosaved: '✓ Otomatik kaydedildi',
+    loadedNotBackedUp: 'Yüklendi, ancak önceki düzenlemeler geçmişe kaydedilemedi.',
     historyCleared: 'Geçmiş temizlendi.',
     saveFailed: 'Kaydedilemedi: tarayıcı deposuna yazılamadı.',
+  },
+  linter: {
+    nonAscii: '"{label}" ASCII dışı karakter içeriyor. Etiket için köşeli parantez kullan: n1[{label}].',
+    edgeLabelSpace: 'Ok-etiketinde boşluk var: "{label}". Çift tırnak kullan: -- "{label}" -->.',
   },
   header: {
     mermaidDocs: 'Mermaid dokümanları',

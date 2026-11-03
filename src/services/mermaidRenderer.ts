@@ -1,14 +1,31 @@
-import mermaid from 'mermaid'
-import elkLayouts from '@mermaid-js/layout-elk'
+import type { Mermaid } from 'mermaid'
 
 import type { AppTheme } from '../types/project'
 import { rt } from '../lib/i18nRuntime'
+import { diagramBody } from './transform/diagramBody'
 
-let initialized: AppTheme | null = null
+let initialized: string | null = null
 let renderCounter = 0
 let renderQueue: Promise<void> = Promise.resolve()
 
-mermaid.registerLayoutLoaders(elkLayouts)
+/**
+ * Mermaid + ELK büyük paketlerdir; ilk ihtiyaç anında yüklenir ki editör
+ * arayüzü onları beklemeden açılsın.
+ */
+let mermaidPromise: Promise<Mermaid> | null = null
+function loadMermaid(): Promise<Mermaid> {
+  mermaidPromise ??= Promise.all([import('mermaid'), import('@mermaid-js/layout-elk')]).then(
+    ([{ default: mermaid }, { default: elkLayouts }]) => {
+      mermaid.registerLayoutLoaders(elkLayouts)
+      return mermaid
+    },
+  )
+  // Yükleme başarısız olursa (ağ hatası) bir sonraki çağrı yeniden denesin.
+  mermaidPromise.catch(() => {
+    mermaidPromise = null
+  })
+  return mermaidPromise
+}
 
 // Diyagram teması artık kullanıcı tarafından seçilmiyor; uygulama temasını takip eder.
 const APP_THEME_TO_MERMAID: Record<AppTheme, 'default' | 'dark'> = {
@@ -16,7 +33,7 @@ const APP_THEME_TO_MERMAID: Record<AppTheme, 'default' | 'dark'> = {
   dark: 'dark',
 }
 
-function baseConfig(theme: AppTheme) {
+function baseConfig(theme: AppTheme, htmlLabels: boolean) {
   return {
     startOnLoad: false,
     securityLevel: 'strict' as const,
@@ -28,10 +45,10 @@ function baseConfig(theme: AppTheme) {
     // kirlenmesini (taint -> toBlob SecurityError) önler; PNG export çalışır.
     // ELK düzeni yalnızca kök seviyedeki `htmlLabels` anahtarına bakar;
     // `flowchart.htmlLabels` tek başına yetmez.
-    htmlLabels: false,
+    htmlLabels,
     flowchart: {
       useMaxWidth: false,
-      htmlLabels: false,
+      htmlLabels,
       defaultRenderer: 'elk' as const,
       curve: 'basis' as const,
     },
@@ -46,19 +63,26 @@ function genId(): string {
   return `mmd-${Date.now().toString(36)}-${renderCounter}`
 }
 
-function applyTheme(theme: AppTheme) {
-  mermaid.initialize(baseConfig(theme))
-  initialized = theme
-}
+/**
+ * Mindmap'te metin tabanlı etiketler düğüm içinde ortalanmaz (kök yazısı
+ * kayar); bu tür HTML etiketle çizilir ve PNG'de stripForeignObjects devreye girer.
+ * Diğer tüm türlerde <text> etiketleri tercih edilir: PNG'ye birebir geçer,
+ * sarma ve sınıf renkleri korunur.
+ */
+const usesHtmlLabels = (code: string): boolean => /^\s*mindmap\b/i.test(diagramBody(code))
 
-export function configureMermaid(theme: AppTheme) {
-  if (initialized !== theme) applyTheme(theme)
+function configureMermaid(mermaid: Mermaid, theme: AppTheme, htmlLabels: boolean) {
+  const key = `${theme}:${htmlLabels}`
+  if (initialized === key) return
+  mermaid.initialize(baseConfig(theme, htmlLabels))
+  initialized = key
 }
 
 async function renderOne(code: string, theme: AppTheme): Promise<string> {
-  configureMermaid(theme)
-
+  const mermaid = await loadMermaid()
   const trimmed = code.trim()
+  configureMermaid(mermaid, theme, usesHtmlLabels(trimmed))
+
   if (!trimmed) {
     throw new Error(rt('preview.emptySource'))
   }
@@ -138,6 +162,7 @@ export async function canParse(code: string): Promise<boolean> {
   const trimmed = code.trim()
   if (!trimmed) return true
   try {
+    const mermaid = await loadMermaid()
     await mermaid.parse(trimmed)
     return true
   } catch {

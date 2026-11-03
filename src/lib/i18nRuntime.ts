@@ -50,16 +50,51 @@ export function translate(
   return key
 }
 
-function readStoredLocale(): Locale {
-  if (typeof window === 'undefined') return 'tr'
-  const stored = window.localStorage.getItem('my-flowchart-locale')
-  return stored === 'en' || stored === 'tr' ? stored : 'tr'
+export const LOCALE_STORAGE_KEY = 'my-flowchart-locale'
+
+/**
+ * Tarayıcı dil tercihlerinden (öncelik sırasıyla) desteklenen ilkini seçer;
+ * hiçbiri desteklenmiyorsa İngilizce.
+ */
+export function detectBrowserLocale(): Locale {
+  const languages = navigator.languages?.length ? navigator.languages : [navigator.language]
+  for (const lang of languages) {
+    const primary = (lang ?? '').toLowerCase().split('-')[0]
+    if (primary === 'tr' || primary === 'en') return primary
+  }
+  return 'en'
 }
 
-let currentLocale: Locale = readStoredLocale()
+/**
+ * Kullanıcının kayıtlı dil seçimi varsa o, yoksa tarayıcı dili.
+ * Depolama kapalı/engelliyse (gizli mod, çerez engeli) uygulama açılışı düşmesin.
+ */
+export function readStoredLocale(): Locale {
+  try {
+    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY)
+    if (stored === 'en' || stored === 'tr') return stored
+  } catch {
+    // depolamaya erişilemedi — tarayıcı diline düş
+  }
+  return detectBrowserLocale()
+}
+
+export function storeLocale(locale: Locale): void {
+  try {
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+  } catch {
+    // yazılamadı — dil bu oturum için bellekte geçerli kalır
+  }
+}
+
+let currentLocale: Locale = typeof window === 'undefined' ? 'en' : readStoredLocale()
 
 export function setRuntimeLocale(locale: Locale): void {
   currentLocale = locale
+}
+
+export function getRuntimeLocale(): Locale {
+  return currentLocale
 }
 
 /** React dışı kod (ör. zustand store) için çeviri. */

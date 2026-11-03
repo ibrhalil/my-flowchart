@@ -5,13 +5,12 @@ import { rt } from '../../lib/i18nRuntime'
 
 const slugify = (s: string): string =>
   s
-    .toLowerCase()
-    .replace(/ç/g, 'c')
-    .replace(/ğ/g, 'g')
+    // 'tr' yerel ayarı: İ -> i, I -> ı (varsayılan toLowerCase "i̇" üretir).
+    .toLocaleLowerCase('tr')
     .replace(/ı/g, 'i')
-    .replace(/ö/g, 'o')
-    .replace(/ş/g, 's')
-    .replace(/ü/g, 'u')
+    // Aksanlı harfleri ayrıştırıp işaretleri at: ç->c, ğ->g, ö->o, ş->s, ü->u, é->e …
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '') || 'diagram'
 
@@ -24,17 +23,25 @@ const PNG_BACKGROUND: Record<ProjectFile['theme'], string> = {
   dark: '#2d1b45',
 }
 
+/** `width="100%"` gibi yüzdeli / geçersiz değerler <img> için içsel boyut sayılmaz. */
+const isAbsoluteSize = (v: string | null): boolean => {
+  if (!v) return false
+  const n = parseFloat(v)
+  return Number.isFinite(n) && n > 0 && !v.trim().endsWith('%')
+}
+
 /**
- * SVG'de açık width/height yoksa viewBox'tan türetir.
- * <img> yüklemesinin doğru naturalWidth/Height alması (0-boyut failure
- * modunu önlemek) için.
+ * SVG'de mutlak width/height yoksa viewBox'tan türetir.
+ * Mermaid `useMaxWidth` açık türlerde (class, state, ER, mindmap …)
+ * `width="100%"` üretir; <img> yüklemesinin doğru naturalWidth/Height alması
+ * (0-boyut / 300x150 failure modunu önlemek) için bu değerler değiştirilir.
  */
 function ensureSvgSize(svg: string): string {
   try {
     const doc = new DOMParser().parseFromString(svg, 'image/svg+xml')
     const el = doc.documentElement
-    const hasW = el.getAttribute('width')
-    const hasH = el.getAttribute('height')
+    const hasW = isAbsoluteSize(el.getAttribute('width'))
+    const hasH = isAbsoluteSize(el.getAttribute('height'))
     if (hasW && hasH) return svg
     const vb = (el.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number)
     if (vb.length === 4 && vb[2] > 0 && vb[3] > 0) {

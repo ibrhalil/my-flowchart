@@ -181,9 +181,13 @@ export const en = {
   },
   toasts: {
     loaded: 'Loaded.',
-    autosaved: '✓ Auto-saved',
+    loadedNotBackedUp: 'Loaded, but your previous edits could not be saved to history.',
     historyCleared: 'History cleared.',
     saveFailed: 'Could not save: browser storage write failed.',
+  },
+  linter: {
+    nonAscii: '"{label}" contains non-ASCII characters. Use square brackets for the label: n1[{label}].',
+    edgeLabelSpace: 'Space in an unquoted edge label: "{label}". Use double quotes: -- "{label}" -->.',
   },
   header: {
     mermaidDocs: 'Mermaid docs',

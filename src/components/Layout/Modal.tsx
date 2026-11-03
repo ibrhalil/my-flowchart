@@ -21,6 +21,13 @@ export function Modal({ open, title, onClose, children, widthClass = 'max-w-3xl'
   const headingId = useId()
   const restoreFocusRef = useRef<HTMLElement | null>(null)
 
+  // Ebeveyn her render'da yeni bir onClose geçebilir; effect'in buna bağlı
+  // olması odağı her seferinde diyaloğun başına sıfırlardı.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
   useEffect(() => {
     if (!open) return
 
@@ -36,7 +43,7 @@ export function Modal({ open, title, onClose, children, widthClass = 'max-w-3xl'
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation()
-        onClose()
+        onCloseRef.current()
         return
       }
       if (e.key !== 'Tab') return
@@ -68,7 +75,7 @@ export function Modal({ open, title, onClose, children, widthClass = 'max-w-3xl'
       suppressTooltipFocusOpen()
       restoreFocusRef.current?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 

@@ -94,6 +94,9 @@ export function DiagramPreview() {
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
   const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null)
   const prevFitSizeRef = useRef<{ w: number; h: number } | null>(null)
+  // Kullanıcı zoom/pan'e dokunmadığı sürece görünüm pencereye otomatik sığdırılır.
+  // El ile değiştirdikten sonra yeniden boyutlandırma / sekme değişimi onu ezmez.
+  const autoFitRef = useRef(true)
 
   const project = useMemo(
     () => ({
@@ -110,16 +113,17 @@ export function DiagramPreview() {
   useEffect(() => {
     let cancelled = false
     setRendering(true)
-    setError(null)
     renderMermaid(debouncedCode, theme)
       .then((out) => {
         if (cancelled) return
         setRender({ svg: out, code: debouncedCode, theme })
+        setError(null)
       })
       .catch((err) => {
         console.error('Mermaid diagram rendering failed:', err)
         if (cancelled) return
-        setRender(null)
+        // Son geçerli diyagram silinmez: yazarken oluşan geçici söz dizimi
+        // hataları görünümü (zoom/pan) ve diyagramı sıfırlamasın.
         setError(parseError(err))
       })
       .finally(() => {
@@ -153,16 +157,24 @@ export function DiagramPreview() {
   const applyFit = useCallback(() => {
     const z = computeFitZoom()
     if (z == null) return
+    autoFitRef.current = true
     setZoom(z)
     setPan({ x: 0, y: 0 })
   }, [computeFitZoom])
 
+  // Pencere/panel boyutu değişince yalnızca kullanıcı görünümü elle değiştirmediyse yeniden sığdır.
+  const refitIfAuto = useCallback(() => {
+    if (autoFitRef.current) applyFit()
+  }, [applyFit])
+
   const changeZoom = useCallback((nextZoom: number) => {
+    autoFitRef.current = false
     setZoom(clampZoom(nextZoom))
   }, [clampZoom])
   const zoomIn = useCallback(() => changeZoom(+(zoom + 0.15).toFixed(2)), [changeZoom, zoom])
   const zoomOut = useCallback(() => changeZoom(+(zoom - 0.15).toFixed(2)), [changeZoom, zoom])
   const resetView = useCallback(() => {
+    autoFitRef.current = false
     setZoom(1)
     setPan({ x: 0, y: 0 })
   }, [])
@@ -194,21 +206,21 @@ export function DiagramPreview() {
       if (width === previousWidth && height === previousHeight) return
       previousWidth = width
       previousHeight = height
-      applyFit()
+      refitIfAuto()
     })
     observer.observe(scroller)
     return () => observer.disconnect()
-  }, [applyFit])
+  }, [refitIfAuto])
 
   useEffect(() => {
     const onFsChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement))
       // Tam ekran geçişinde viewport değişir; bir sonraki karede yeniden sığdır.
-      requestAnimationFrame(() => applyFit())
+      requestAnimationFrame(() => refitIfAuto())
     }
     document.addEventListener('fullscreenchange', onFsChange)
     return () => document.removeEventListener('fullscreenchange', onFsChange)
-  }, [applyFit])
+  }, [refitIfAuto])
 
   const toggleFullscreen = useCallback(() => {
     try {
@@ -265,6 +277,7 @@ export function DiagramPreview() {
     if (pointersRef.current.size === 1 && dragging) {
       const dx = e.clientX - prev.x
       const dy = e.clientY - prev.y
+      autoFitRef.current = false
       setPan((p) => ({ x: p.x + dx, y: p.y + dy }))
     }
   }
@@ -280,13 +293,21 @@ export function DiagramPreview() {
     setDragging(pointersRef.current.size === 1)
   }
 
-  const onWheel = (e: React.WheelEvent) => {
-    if (!e.ctrlKey && !e.metaKey) return
-    e.preventDefault()
-    // Mevcut zoom'a orantılı adım; yüksek zoomlarda daha doğal his.
-    const factor = zoom * (e.deltaY < 0 ? 0.12 : -0.12)
-    changeZoom(+(zoom + factor).toFixed(3))
-  }
+  // React'in onWheel'i passive olduğundan preventDefault() çalışmaz ve tarayıcı
+  // sayfayı da zoom'lar; bu yüzden dinleyici passive:false ile elle eklenir.
+  useEffect(() => {
+    const scroller = scrollRef.current
+    if (!scroller) return
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return
+      e.preventDefault()
+      autoFitRef.current = false
+      // Mevcut zoom'a orantılı adım; yüksek zoomlarda daha doğal his.
+      setZoom((z) => clampZoom(+(z * (e.deltaY < 0 ? 1.12 : 0.88)).toFixed(3)))
+    }
+    scroller.addEventListener('wheel', onWheel, { passive: false })
+    return () => scroller.removeEventListener('wheel', onWheel)
+  }, [clampZoom])
 
   const [exportingPng, setExportingPng] = useState(false)
 
@@ -383,7 +404,6 @@ export function DiagramPreview() {
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
         onPointerCancel={endPointer}
-        onWheel={onWheel}
       >
         <div
           className="flex min-h-full min-w-full items-center justify-center p-8"
@@ -404,6 +424,7 @@ export function DiagramPreview() {
                   transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                   transformOrigin: 'top left',
                   transition: dragging ? 'none' : 'transform 120ms ease-out',
+                  opacity: error ? 0.35 : 1,
                 }}
                 dangerouslySetInnerHTML={{ __html: render.svg }}
               />

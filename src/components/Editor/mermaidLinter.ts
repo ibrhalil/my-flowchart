@@ -1,6 +1,9 @@
 import { linter, type Diagnostic } from '@codemirror/lint'
 import type { Extension } from '@codemirror/state'
 
+import { rt } from '../../lib/i18nRuntime'
+import { isFlowchartLike } from '../../services/transform/normalizeMermaid'
+
 /**
  * Mermaid kaynak kodu üzerinde ASCII dışı karakter / boşluk kaynaklı
  * yaygın hataları işaretleyen CodeMirror linter.
@@ -52,7 +55,7 @@ function analyzeLine(lineText: string, baseFrom: number): Diagnostic[] {
       out.push({
         from: baseFrom + m.index,
         to: baseFrom + m.index + word.length,
-        message: `"${idPart}" ASCII dışı karakter içeriyor. Etiket için köşeli parantez kullan: n1[${idPart}].`,
+        message: rt('linter.nonAscii', { label: idPart }),
         severity: 'warning',
       })
     }
@@ -68,7 +71,7 @@ function analyzeLine(lineText: string, baseFrom: number): Diagnostic[] {
     out.push({
       from: baseFrom + labelStart,
       to: baseFrom + labelStart + label.length,
-      message: `Ok-etiketinde boşluk var: "${label}". Çift tırnak kullan: -- "${label}" -->.`,
+      message: rt('linter.edgeLabelSpace', { label }),
       severity: 'warning',
     })
   }
@@ -81,7 +84,7 @@ export const mermaidLinter: Extension = linter((view) => {
   const text = doc.toString()
 
   // Yalnızca flowchart/graph blokları işle
-  if (!/(^|\n)\s*(flowchart|graph)\b/im.test(text)) return []
+  if (!isFlowchartLike(text)) return []
 
   const diagnostics: Diagnostic[] = []
   const lineCount = doc.lines

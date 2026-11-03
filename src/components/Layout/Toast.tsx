@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { useDiagramStore } from '../../store/diagramStore'
 
@@ -6,6 +7,14 @@ export function Toast() {
   const toast = useDiagramStore((s) => s.toast)
   const setToast = useDiagramStore((s) => s.setToast)
   const [visible, setVisible] = useState(false)
+  const [host, setHost] = useState<Element>(() => document.fullscreenElement ?? document.body)
+
+  // Tam ekranda yalnızca tam ekran öğesinin alt ağacı görünür; bildirim orada çizilmeli.
+  useEffect(() => {
+    const onChange = () => setHost(document.fullscreenElement ?? document.body)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
 
   useEffect(() => {
     if (!toast) return
@@ -22,7 +31,7 @@ export function Toast() {
 
   if (!toast) return null
 
-  return (
+  return createPortal(
     <div
       role="status"
       aria-live="polite"
@@ -33,6 +42,7 @@ export function Toast() {
       <div className="rounded-lg bg-text px-4 py-2 text-sm font-medium text-bg-surface shadow-lg ring-1 ring-border">
         {toast}
       </div>
-    </div>
+    </div>,
+    host,
   )
 }
