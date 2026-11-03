@@ -21,7 +21,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     'bg-primary text-on-primary shadow-sm transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50',
   ghost:
-    'border border-border bg-bg-surface text-text-muted transition hover:bg-bg-subtle hover:text-text disabled:cursor-not-allowed disabled:opacity-50',
+    'border border-border bg-bg-surface text-text-muted transition enabled:hover:bg-primary-soft enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-50',
   danger:
     'text-danger transition hover:bg-danger-soft disabled:cursor-not-allowed disabled:opacity-40',
   'danger-soft':

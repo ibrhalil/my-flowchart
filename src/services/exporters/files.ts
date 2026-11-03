@@ -2,6 +2,7 @@ import { saveAs } from 'file-saver'
 
 import type { ProjectFile } from '../../types/project'
 import { rt } from '../../lib/i18nRuntime'
+import { withLeadingDescription } from '../importers/mmdHeader'
 
 const slugify = (s: string): string =>
   s
@@ -87,7 +88,9 @@ function stripForeignObjects(svg: string): string {
 }
 
 export function exportMmd(project: ProjectFile): void {
-  const blob = new Blob([project.code], { type: 'text/plain;charset=utf-8' })
+  const blob = new Blob([withLeadingDescription(project.code, project.description)], {
+    type: 'text/plain;charset=utf-8',
+  })
   saveAs(blob, `${baseName(project)}.mmd`)
 }
 

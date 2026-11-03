@@ -109,6 +109,13 @@ export function DiagramPreview() {
 
   useEffect(() => {
     let cancelled = false
+    if (!debouncedCode.trim()) {
+      // Boş belge hata değil; önizleme yalnızca ipucu gösterir.
+      setRender(null)
+      setError(null)
+      setRendering(false)
+      return
+    }
     setRendering(true)
     renderMermaid(debouncedCode, theme)
       .then((out) => {
@@ -420,7 +427,9 @@ export function DiagramPreview() {
               />
             </div>
           ) : !error ? (
-            <div className="text-sm text-text-subtle">{t('preview.previewNotReady')}</div>
+            <div className="text-sm text-text-subtle">
+              {code.trim() ? t('preview.previewNotReady') : t('preview.emptyHint')}
+            </div>
           ) : null}
         </div>
 
@@ -538,7 +547,7 @@ function Toolbar(props: ToolbarProps) {
         <button
           type="button"
           onClick={props.resetView}
-          className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs tabular-nums text-text-muted transition hover:bg-bg-subtle hover:text-text"
+          className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs tabular-nums text-text-muted transition hover:bg-primary-soft hover:text-primary"
         >
           %{Math.round(props.zoom * 100)}
         </button>

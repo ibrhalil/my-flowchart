@@ -10,7 +10,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(function Me
     <button
       ref={ref}
       type="button"
-      className={`block w-full px-3 py-1.5 text-left text-text-muted transition hover:bg-bg-subtle hover:text-text ${className}`}
+      className={`block w-full px-3 py-1.5 text-left text-text-muted transition enabled:hover:bg-primary-soft enabled:hover:text-primary ${className}`}
       {...rest}
     >
       {children}

@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 import { isTooltipFocusOpenSuppressed } from './tooltipFocus'
@@ -23,15 +23,56 @@ export function Tooltip({ label, children, side = 'top', delay = 0, className }:
   const tipRef = useRef<HTMLSpanElement | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const show = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => setOpen(true), delay)
-  }, [delay])
+  // Tooltip'in neden açıldığı: fare üzerinde mi, klavye odağında mı. Kapatma kuralı buna bağlıdır.
+  const sourceRef = useRef<'hover' | 'focus' | null>(null)
 
   const hide = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current)
+    sourceRef.current = null
     setOpen(false)
   }, [])
+
+  const showOnHover = useCallback(
+    (e: React.PointerEvent) => {
+      // Dokunmatikte sahte hover kalıcı takılır; tooltip yalnızca fare/kalem için.
+      if (e.pointerType === 'touch') return
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => {
+        sourceRef.current = 'hover'
+        setOpen(true)
+      }, delay)
+    },
+    [delay],
+  )
+
+  // Açıkken yalnızca bileşenin kendi olaylarına güvenme: ayrılma olayı kaçsa bile
+  // (tam ekran geçişi, devre dışı kalan buton, odak değişimi) tooltip kapanır.
+  useEffect(() => {
+    if (!open) return
+    const onPointerMove = (e: PointerEvent) => {
+      if (sourceRef.current !== 'hover') return
+      const r = triggerRef.current?.getBoundingClientRect()
+      const inside =
+        !!r && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom
+      if (!inside) hide()
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') hide()
+    }
+    window.addEventListener('pointermove', onPointerMove, true)
+    window.addEventListener('keydown', onKeyDown, true)
+    window.addEventListener('blur', hide)
+    window.addEventListener('scroll', hide, true)
+    // Portal hedefi (body / tam ekran öğesi) değişir; eski konumda kalmasın.
+    document.addEventListener('fullscreenchange', hide)
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove, true)
+      window.removeEventListener('keydown', onKeyDown, true)
+      window.removeEventListener('blur', hide)
+      window.removeEventListener('scroll', hide, true)
+      document.removeEventListener('fullscreenchange', hide)
+    }
+  }, [open, hide])
 
   useLayoutEffect(() => {
     if (!open) return
@@ -82,14 +123,18 @@ export function Tooltip({ label, children, side = 'top', delay = 0, className }:
       <span
         ref={triggerRef}
         className={`relative inline-flex ${className ?? ''}`}
-        onMouseEnter={show}
-        onMouseLeave={hide}
-        onFocus={() => {
+        onPointerEnter={showOnHover}
+        onPointerLeave={hide}
+        onPointerDown={hide}
+        onFocus={(e) => {
           // Programatik odak geri dönüşü tooltip'i faresiz açıp takılı bırakır (bkz. tooltipFocus).
           if (isTooltipFocusOpenSuppressed()) return
+          // Fare tıklamasıyla gelen odak klavye odağı değildir; yalnızca klavye için aç.
+          if (!e.target.matches(':focus-visible')) return
+          sourceRef.current = 'focus'
           setOpen(true)
         }}
-        onBlur={() => setOpen(false)}
+        onBlur={hide}
       >
         {children}
       </span>
@@ -103,7 +148,7 @@ export function Tooltip({ label, children, side = 'top', delay = 0, className }:
                 top: coords ? coords.top : -9999,
                 left: coords ? coords.left : -9999,
               }}
-              className="pointer-events-none z-[100] whitespace-nowrap rounded-md bg-text px-2 py-1 text-[11px] font-medium text-bg-surface shadow-md ring-1 ring-border"
+              className="pointer-events-none z-[100] whitespace-nowrap rounded-md bg-text px-2 py-1 text-2xs font-medium text-bg-surface shadow-md ring-1 ring-border"
             >
               {label}
             </span>,

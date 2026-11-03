@@ -1,5 +1,6 @@
 import type { ProjectFile, AppTheme } from '../../types/project'
 import { rt } from '../../lib/i18nRuntime'
+import { extractLeadingDescription } from './mmdHeader'
 
 export interface ImportOutcome {
   project: Partial<ProjectFile>
@@ -21,9 +22,11 @@ export async function readTextFile(file: File): Promise<string> {
 }
 
 export function importFromMmd(code: string, fallbackTitle: string): ImportOutcome {
+  const { description, code: body } = extractLeadingDescription(code)
   const project: Partial<ProjectFile> = {
-    code,
+    code: body,
     title: fallbackTitle,
+    ...(description ? { description } : {}),
   }
   return { project, note: rt('preview.importedSource') }
 }

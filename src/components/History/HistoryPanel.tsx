@@ -1,4 +1,4 @@
-import { Trash2, Undo2, History as HistoryIcon } from 'lucide-react'
+import { Trash2, History as HistoryIcon } from 'lucide-react'
 
 import { Modal } from '../Layout/Modal'
 import { useDiagramStore } from '../../store/diagramStore'
@@ -16,6 +16,13 @@ export function HistoryPanel({ open, onClose }: HistoryPanelProps) {
   const remove = useDiagramStore((s) => s.removeHistory)
   const clear = useDiagramStore((s) => s.clearHistory)
   const { locale, t } = useTranslation()
+
+  // Satırın her yeri tıklanabilir; metin seçerken (kopyalamak için) yanlışlıkla geri yüklenmesin.
+  const openEntry = (id: string) => {
+    if (window.getSelection()?.toString()) return
+    restore(id)
+    onClose()
+  }
 
   const formatTime = (ts: number): string => {
     try {
@@ -57,40 +64,34 @@ export function HistoryPanel({ open, onClose }: HistoryPanelProps) {
       ) : (
         <ul className="divide-y divide-border">
           {history.map((h) => (
-            <li key={h.id} className="flex items-start gap-3 px-4 py-3">
+            <li
+              key={h.id}
+              onClick={() => openEntry(h.id)}
+              className="flex cursor-pointer items-start gap-3 px-4 py-3 transition hover:bg-primary-soft"
+            >
               <div className="min-w-0 flex-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    restore(h.id)
-                    onClose()
-                  }}
                   title={t('history.restore')}
                   className="block w-full truncate text-left text-sm font-medium text-text transition hover:text-primary"
                 >
                   {h.title || t('history.noName')}
                 </button>
-                <div className="text-[11px] tabular-nums text-text-subtle">
+                <div className="text-2xs tabular-nums text-text-subtle">
                   {formatTime(h.savedAt)}
                 </div>
-                <pre className="mt-1 max-h-20 overflow-hidden rounded bg-bg-subtle p-2 text-[10px] text-text-muted">
+                <pre className="mt-1 max-h-20 overflow-hidden rounded bg-bg-subtle p-2 text-2xs text-text-muted">
                   {h.code.split('\n').slice(0, 4).join('\n')}
                 </pre>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <IconButton
-                  label={t('history.restore')}
-                  onClick={() => {
-                    restore(h.id)
-                    onClose()
-                  }}
-                >
-                  <Undo2 size={14} />
-                </IconButton>
-                <IconButton
                   label={t('history.delete')}
                   variant="danger"
-                  onClick={() => remove(h.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    remove(h.id)
+                  }}
                 >
                   <Trash2 size={14} />
                 </IconButton>

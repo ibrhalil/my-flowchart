@@ -16,25 +16,25 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
     <Modal open={open} onClose={onClose} title={t('help.title')} widthClass="max-w-3xl">
       <div className="space-y-6 p-5 text-sm text-text-muted">
         <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+          <h3 className="section-label mb-2">
             {t('help.goldenRule')}
           </h3>
           <p
             className="leading-relaxed"
             dangerouslySetInnerHTML={{ __html: t('help.goldenRuleDesc') }}
           />
-          <pre className="mt-2 overflow-auto rounded-lg bg-text p-3 text-[12px] leading-relaxed text-bg-surface">
+          <pre className="mt-2 overflow-auto rounded-lg bg-text p-3 text-xs leading-relaxed text-bg-surface">
 {dict.help.goldenRuleExample}
           </pre>
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+          <h3 className="section-label mb-2">
             {t('help.nodeShapes')}
           </h3>
           <div className="overflow-hidden rounded-lg border border-border">
-            <table className="w-full text-left text-[13px]">
-              <thead className="bg-bg-subtle text-xs uppercase text-text-subtle">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-bg-subtle text-xs uppercase tracking-wide text-text-subtle">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t('help.syntax')}</th>
                   <th className="px-3 py-2 font-medium">{t('help.description')}</th>
@@ -44,7 +44,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
                 {shapes.map((s) => (
                   <tr key={s.syntax}>
                     <td className="px-3 py-1.5">
-                      <code className="rounded bg-bg-subtle px-1.5 py-0.5 text-[12px] text-text">
+                      <code className="rounded bg-bg-subtle px-1.5 py-0.5 text-xs text-text">
                         {s.syntax}
                       </code>
                     </td>
@@ -57,12 +57,12 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+          <h3 className="section-label mb-2">
             {t('help.tips')}
           </h3>
           <div className="overflow-hidden rounded-lg border border-border">
-            <table className="w-full text-left text-[13px]">
-              <thead className="bg-bg-subtle text-xs uppercase text-text-subtle">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-bg-subtle text-xs uppercase tracking-wide text-text-subtle">
                 <tr>
                   <th className="px-3 py-2 font-medium">{t('help.syntax')}</th>
                   <th className="px-3 py-2 font-medium">{t('help.description')}</th>
@@ -72,7 +72,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
                 {tips.map((s) => (
                   <tr key={s.syntax}>
                     <td className="px-3 py-1.5">
-                      <code className="rounded bg-bg-subtle px-1.5 py-0.5 text-[12px] text-text">
+                      <code className="rounded bg-bg-subtle px-1.5 py-0.5 text-xs text-text">
                         {s.syntax}
                       </code>
                     </td>
@@ -85,14 +85,14 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+          <h3 className="section-label mb-2">
             {t('help.pitfalls')}
           </h3>
           <ul className="space-y-2">
             {pitfalls.map((p) => (
               <li
                 key={p.problem}
-                className="rounded-lg border border-warning/50 bg-warning-soft p-3 text-[13px]"
+                className="rounded-lg border border-warning/50 bg-warning-soft p-3 text-sm"
               >
                 <div className="font-medium text-text">{p.problem}</div>
                 <div className="mt-1 text-text-muted">{p.solution}</div>
@@ -102,7 +102,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
         </section>
 
         <section>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+          <h3 className="section-label mb-2">
             {t('help.autoHelp')}
           </h3>
           <p

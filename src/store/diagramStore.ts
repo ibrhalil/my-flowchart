@@ -6,6 +6,7 @@ import { rt, getRuntimeLocale } from '../lib/i18nRuntime'
 import { useSettingsStore } from './settingsStore'
 import * as draftStorage from '../services/storage/draftStorage'
 import * as history from '../services/storage/localHistory'
+import { consumeErasedMark, eraseAppStorage, markErased } from '../services/storage/appStorage'
 
 export type DraftSaveState = 'saved' | 'pending' | 'error'
 
@@ -32,6 +33,8 @@ export interface DiagramState {
     theme?: AppTheme
     pngScale?: number
   }) => void
+  /** Boş bir belge açar; kaydedilmemiş düzenleme önce geçmişe alınır. */
+  newDocument: () => void
   setToast: (t: string | null) => void
 
   refreshHistory: () => void
@@ -56,12 +59,17 @@ function bootstrap(): Pick<DiagramState, 'title' | 'description' | 'code' | 'upd
   return {
     title: (en && DEFAULT_TEMPLATE.titleEn) || DEFAULT_TEMPLATE.title,
     description: (en && DEFAULT_TEMPLATE.descriptionEn) || DEFAULT_TEMPLATE.description,
-    code: DEFAULT_TEMPLATE.code,
+    code: (en && DEFAULT_TEMPLATE.codeEn) || DEFAULT_TEMPLATE.code,
     updatedAt: Date.now(),
   }
 }
 
 const initial = bootstrap()
+
+// Veri silinirken bekleyen taslak/anlık kayıt yazmaları, silinen veriyi geri yazmasın.
+let writesBlocked = false
+
+const newHistoryId = () => `h-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
 
 /** Kaydedilmemiş düzenlemeyi geçmişe alır; yazma başarısızsa true döner. */
 function backupDirtyState(get: () => DiagramState): boolean {
@@ -76,7 +84,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   code: initial.code,
   updatedAt: initial.updatedAt,
   history: history.loadHistory(),
-  toast: null,
+  toast: consumeErasedMark() ? rt('toasts.dataErased') : null,
   dirty: false,
   draftState: 'saved',
 
@@ -110,13 +118,25 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     })
   },
 
+  newDocument: () => {
+    const backupFailed = backupDirtyState(get)
+    set({
+      code: '',
+      title: rt('defaultTitle'),
+      description: '',
+      updatedAt: Date.now(),
+      dirty: false,
+      toast: rt(backupFailed ? 'toasts.loadedNotBackedUp' : 'toasts.created'),
+    })
+  },
+
   setToast: (toast) => set({ toast }),
 
   refreshHistory: () => set({ history: history.loadHistory() }),
 
   saveSnapshot: () => {
     const s = get()
-    if (!s.dirty) return
+    if (!s.dirty || writesBlocked) return
     const last = s.history[0]
     if (
       last &&
@@ -128,7 +148,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       return
     }
     const entry: HistoryEntry = {
-      id: `h-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      id: newHistoryId(),
       title: s.title,
       description: s.description,
       code: s.code,
@@ -180,18 +200,64 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
+// Bu sekmenin depoda bildiği son taslak zamanı; daha yeni bir kayıt başka sekmeden gelmiştir.
+let knownDraftUpdatedAt = initial.updatedAt
+
+/** Başka sekmenin yazdığı taslağı, üzerine yazmadan önce geçmişe alır (veri kaybı olmasın). */
+function backupOtherTabDraft(current: DiagramState): void {
+  const other = draftStorage.loadDraft()
+  if (!other || typeof other.code !== 'string') return
+  if (typeof other.updatedAt !== 'number' || other.updatedAt <= knownDraftUpdatedAt) return
+  const same =
+    other.code === current.code &&
+    (other.title ?? '') === current.title &&
+    (other.description ?? '') === current.description
+  if (same) return
+  const res = history.pushHistory({
+    id: newHistoryId(),
+    title: other.title ?? '',
+    description: other.description ?? '',
+    code: other.code,
+    savedAt: other.updatedAt,
+  })
+  if (res.ok) {
+    useDiagramStore.setState({ history: res.entries, toast: rt('toasts.otherTabBackedUp') })
+  }
+}
+
+/** Bekleyen taslak kaydını iptal eder ve sonraki tüm depolama yazmalarını durdurur. */
+export function blockStorageWrites(): void {
+  writesBlocked = true
+  if (saveTimer) {
+    clearTimeout(saveTimer)
+    saveTimer = null
+  }
+}
+
+/** Tarayıcıdaki tüm uygulama verisini siler. Başarılıysa çağıran sayfayı yenilemelidir. */
+export function eraseAllData(): boolean {
+  blockStorageWrites()
+  const ok = eraseAppStorage()
+  if (ok) markErased()
+  else writesBlocked = false
+  return ok
+}
+
 function writeDraftNow(): void {
   if (saveTimer) {
     clearTimeout(saveTimer)
     saveTimer = null
   }
+  if (writesBlocked) return
   const s = useDiagramStore.getState()
+  backupOtherTabDraft(s)
   const ok = draftStorage.saveDraft({
     title: s.title,
     description: s.description,
     code: s.code,
     updatedAt: s.updatedAt,
   })
+  if (ok) knownDraftUpdatedAt = s.updatedAt
   const wasError = s.draftState === 'error'
   useDiagramStore.setState({ draftState: ok ? 'saved' : 'error' })
   if (!ok && !wasError) {

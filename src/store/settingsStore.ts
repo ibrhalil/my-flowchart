@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: SettingsPatch = {
   pngScale: 2,
   editorFontSize: 13,
   autoSaveEnabled: true,
-  autoSaveIdleMs: 5000,
+  autoSaveIdleMs: 10000,
 }
 
 const safeLocalStorage: StateStorage = {
@@ -70,6 +70,8 @@ function mergeValidated(persisted: unknown, current: SettingsPatch): SettingsPat
   }
 }
 
+export const SETTINGS_STORAGE_KEY = 'my-flowchart-settings'
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
@@ -83,7 +85,7 @@ export const useSettingsStore = create<SettingsState>()(
       resetSettings: () => set({ ...DEFAULT_SETTINGS }),
     }),
     {
-      name: 'my-flowchart-settings',
+      name: SETTINGS_STORAGE_KEY,
       storage: createJSONStorage(() => safeLocalStorage),
       merge: (persisted, current) => ({
         ...current,

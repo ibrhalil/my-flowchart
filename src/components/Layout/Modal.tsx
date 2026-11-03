@@ -94,7 +94,7 @@ export function Modal({ open, title, onClose, children, widthClass = 'max-w-3xl'
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-text-subtle transition hover:bg-bg-subtle hover:text-text"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-text-subtle transition hover:bg-primary-soft hover:text-primary"
             aria-label={t('common.close')}
           >
             <X size={16} />

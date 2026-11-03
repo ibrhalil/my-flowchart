@@ -1,6 +1,6 @@
 import type { ProjectFile } from '../../types/project'
 
-const DRAFT_KEY = 'mermaid-studio:draft:v1'
+export const DRAFT_KEY = 'mermaid-studio:draft:v1'
 
 export function loadDraft(): Partial<ProjectFile> | null {
   try {

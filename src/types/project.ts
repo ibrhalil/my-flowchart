@@ -41,6 +41,8 @@ export interface TemplateEntry {
   /** EN arayüzde gösterilecek açıklama (yoksa `description` kullanılır) */
   descriptionEn?: string
   code: string
+  /** EN arayüzde yüklenecek kaynak (yoksa `code` kullanılır) */
+  codeEn?: string
 }
 
 export interface HistoryEntry {

@@ -1,6 +1,6 @@
 import type { HistoryEntry } from '../../types/project'
 
-const KEY = 'mermaid-studio:history:v1'
+export const HISTORY_KEY = 'mermaid-studio:history:v1'
 const MAX_ENTRIES = 50
 
 export interface HistoryUpdate {
@@ -20,7 +20,7 @@ function isValidEntry(e: unknown): boolean {
 
 export function loadHistory(): HistoryEntry[] {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(HISTORY_KEY)
     if (!raw) return []
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
@@ -40,7 +40,7 @@ export function loadHistory(): HistoryEntry[] {
 
 function persist(entries: HistoryEntry[]): boolean {
   try {
-    localStorage.setItem(KEY, JSON.stringify(entries))
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(entries))
     return true
   } catch {
     // Depolama dolu olabilir; çağıran taraf hata durumunu bilir.
