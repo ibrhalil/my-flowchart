@@ -35,8 +35,17 @@ export function EditorToolbar({ onNew }: EditorToolbarProps) {
           className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm font-medium text-text outline-none transition hover:border-primary/40 focus:border-primary focus:bg-bg-surface"
         />
         <IconButton
+          label={t('editor.normalizeTooltip')}
+          side="bottom"
+          onClick={runNormalize}
+          className="shrink-0"
+        >
+          <Wand2 />
+        </IconButton>
+        <IconButton
           label={t('editor.newTooltip')}
           side="bottom"
+          variant="primary"
           onClick={onNew}
           className="shrink-0"
         >
@@ -44,30 +53,19 @@ export function EditorToolbar({ onNew }: EditorToolbarProps) {
         </IconButton>
       </div>
 
-      <div className="mt-1 flex items-start gap-2">
-        <textarea
-          ref={descRef}
-          value={description}
-          onChange={(e) => {
-            setDescription(e.target.value)
-            resizeDesc()
-          }}
-          placeholder={t('editor.descPlaceholder')}
-          aria-label={t('editor.descPlaceholder')}
-          rows={1}
-          className="min-w-0 flex-1 resize-none overflow-auto rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm leading-relaxed text-text-muted outline-none transition hover:border-primary/40 focus:border-primary focus:bg-bg-surface"
-          style={{ maxHeight: 500 }}
-        />
-        <IconButton
-          label={t('editor.normalizeTooltip')}
-          side="bottom"
-          variant="primary"
-          onClick={runNormalize}
-          className="shrink-0"
-        >
-          <Wand2 />
-        </IconButton>
-      </div>
+      <textarea
+        ref={descRef}
+        value={description}
+        onChange={(e) => {
+          setDescription(e.target.value)
+          resizeDesc()
+        }}
+        placeholder={t('editor.descPlaceholder')}
+        aria-label={t('editor.descPlaceholder')}
+        rows={1}
+        className="mt-1 w-full resize-none overflow-auto rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm leading-relaxed text-text-muted outline-none transition hover:border-primary/40 focus:border-primary focus:bg-bg-surface"
+        style={{ maxHeight: 500 }}
+      />
     </div>
   )
 }

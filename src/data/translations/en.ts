@@ -238,6 +238,14 @@ export const en = {
     repository: 'Source code',
     openTooltip: 'Version info',
   },
+  share: {
+    tooltip: 'Share',
+    copied: 'Share link copied.',
+    copiedLong: 'Link copied, but it is very long ({length} characters); some apps may truncate it. Export as .mmd if needed.',
+    failed: 'Could not create or copy the link.',
+    opened: 'Shared diagram opened.',
+    invalid: 'The share link could not be read; it may be corrupted or too large.',
+  },
   header: {
     homeTooltip: 'Start with a blank diagram',
     mermaidDocs: 'Mermaid docs',

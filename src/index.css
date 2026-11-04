@@ -65,6 +65,36 @@
   color-scheme: light;
 }
 
+@keyframes share-flash {
+  from {
+    opacity: var(--flash-peak);
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/*
+ * Paylaş'a basınca ekran görüntüsü alınmış hissi veren kısa efekt.
+ * Açık temada beyaz flaş zemine karışıp görünmez; orada kararma, koyu temada beyaz flaş kullanılır.
+ */
+.share-flash {
+  --flash-peak: 0.35;
+  background: var(--color-text);
+  animation: share-flash 450ms ease-out forwards;
+}
+
+.dark .share-flash {
+  --flash-peak: 0.8;
+  background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-flash {
+    animation-duration: 1ms;
+  }
+}
+
 @utility section-label {
   font-size: var(--text-xs);
   line-height: var(--text-xs--line-height);

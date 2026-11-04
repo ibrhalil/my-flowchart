@@ -12,15 +12,18 @@ import {
   Frame,
   HardDriveDownload,
   HardDrive,
+  Share2,
 } from 'lucide-react'
 
 import { useDiagramStore } from '../../store/diagramStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import type { AppTheme } from '../../types/project'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
+import { useShareUrl } from '../../hooks/useShareUrl'
 import { renderMermaid, parseError } from '../../services/mermaidRenderer'
 import { exportPng, exportSvg, exportMmd, exportJson, exportMarkdown } from '../../services/exporters/files'
 import { importFromFile } from '../../services/importers/fileReader'
+import { LONG_LINK_THRESHOLD, deliverShareLink, encodeShare } from '../../services/share/shareLink'
 import { useTranslation } from '../../lib/i18n'
 import { IconButton } from '../ui/Button'
 import { MenuItem } from '../ui/MenuItem'
@@ -307,6 +310,29 @@ export function DiagramPreview() {
     return () => scroller.removeEventListener('wheel', onWheel)
   }, [clampZoom])
 
+  const shareUrl = useShareUrl({ title, description, code })
+  const [flashKey, setFlashKey] = useState(0)
+
+  const handleShare = async () => {
+    if (!code.trim()) return
+    // Efekt paylaşım menüsünün dönmesini beklemez (menü kullanıcı bitirene kadar açık kalır).
+    setFlashKey((k) => k + 1)
+    try {
+      // Hazır bağlantı varsa `await` yok: paylaş/kopyala çağrısı kullanıcı jesti içinde kalır (Safari).
+      const url = shareUrl ?? (await encodeShare({ title, description, code }))
+      const result = await deliverShareLink(url, title)
+      if (result === 'copied') {
+        setToast(
+          url.length > LONG_LINK_THRESHOLD
+            ? t('share.copiedLong', { length: url.length })
+            : t('share.copied'),
+        )
+      }
+    } catch {
+      setToast(t('share.failed'))
+    }
+  }
+
   const [exportingPng, setExportingPng] = useState(false)
 
   const handleExportPng = async () => {
@@ -364,8 +390,16 @@ export function DiagramPreview() {
   return (
     <div
       ref={containerRef}
-      className="flex h-full flex-col bg-bg-base"
+      className="relative flex h-full flex-col bg-bg-base"
     >
+      {flashKey > 0 ? (
+        <div
+          key={flashKey}
+          aria-hidden
+          onAnimationEnd={() => setFlashKey(0)}
+          className="share-flash pointer-events-none absolute inset-0 z-30"
+        />
+      ) : null}
       <Toolbar
         zoom={zoom}
         zoomIn={zoomIn}
@@ -374,6 +408,8 @@ export function DiagramPreview() {
         onFit={applyFit}
         onImport={() => fileInputRef.current?.click()}
         importing={importing}
+        onShare={handleShare}
+        canShare={code.trim().length > 0}
         onPng={handleExportPng}
         onSvg={handleExportSvg}
         onMmd={() => exportMmd(project)}
@@ -498,6 +534,8 @@ interface ToolbarProps {
   onFit: () => void
   onImport: () => void
   importing: boolean
+  onShare: () => void
+  canShare: boolean
   onPng: () => void
   onSvg: () => void
   onMmd: () => void
@@ -562,6 +600,15 @@ function Toolbar(props: ToolbarProps) {
       <div className="mx-0.5 h-5 w-px bg-border" />
 
       <div className="relative ml-auto flex items-center gap-1.5">
+        <IconButton
+          label={t('share.tooltip')}
+          side="bottom"
+          onClick={props.onShare}
+          disabled={!props.canShare}
+        >
+          <Share2 />
+        </IconButton>
+
         <IconButton
           label={t('preview.importTooltip')}
           side="bottom"

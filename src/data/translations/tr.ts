@@ -238,6 +238,14 @@ export const tr = {
     repository: 'Kaynak kodu',
     openTooltip: 'Sürüm bilgisi',
   },
+  share: {
+    tooltip: 'Paylaş',
+    copied: 'Paylaşım bağlantısı kopyalandı.',
+    copiedLong: 'Bağlantı kopyalandı ama çok uzun ({length} karakter); bazı uygulamalar kısaltabilir. Gerekirse .mmd olarak dışa aktar.',
+    failed: 'Bağlantı oluşturulamadı ya da kopyalanamadı.',
+    opened: 'Paylaşılan diyagram açıldı.',
+    invalid: 'Paylaşım bağlantısı okunamadı; bozuk ya da çok büyük olabilir.',
+  },
   header: {
     homeTooltip: 'Boş bir diyagramla başla',
     mermaidDocs: 'Mermaid dokümanları',

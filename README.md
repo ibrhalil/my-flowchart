@@ -3,8 +3,6 @@
 > Tarayıcıda çalışan, **sunucusuz** Mermaid diyagram editörü.
 > Yaz, canlı önizle, dışa aktar. Hiçbir veri cihazından çıkmaz.
 
-**Canlı:** https://flowchart.ibrhalil.com
-
 [![CI](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -32,6 +30,10 @@ My Flowchart, [Mermaid](https://mermaid.js.org/) sözdizimiyle akış şemaları
 - **5 formatta dışa aktarım** — PNG, SVG, Markdown, `.mmd`, JSON. PNG, önizlemeyle birebir aynı görünür (kenar boşluğu ve tema zemini dahil)
 - **İçe aktarım** — `.mmd`, `.json` ve `.md` (frontmatter + kod bloğu). `.mmd` dosyasının başındaki `%%` yorum satırları açıklama olarak okunur; dışa aktarırken açıklama aynı şekilde dosyanın başına yazılır
 
+**Paylaşım**
+
+- **Paylaşım bağlantısı** — Paylaş butonu diyagramı (başlık, açıklama, kod) tek bir bağlantıya kodlar; sunucu gerekmez. Masaüstünde bağlantı panoya kopyalanır, mobilde sistem paylaşım menüsü açılır. Bağlantıyı açan kişide diyagram otomatik yüklenir; kendi çalışması önce geçmişe kaydedilir
+
 **Kayıt ve geçmiş**
 
 - **Otomatik taslak kaydı** + **geçmiş anlık görüntüleri** (en fazla 50 kayıt, tarayıcı deposunda). Geri yüklemek için satırın herhangi bir yerine tıklamak yeterli
@@ -57,13 +59,15 @@ Diyagramlar **yalnızca tarayıcının `localStorage` alanında** tutulur, hiçb
 
 Hepsini silmek için **Ayarlar → Veriler → Tüm verileri sil** (iki adımlı onay ister, geri alınamaz). Yalnızca bu uygulamanın anahtarları silinir; aynı alan adındaki başka verilere dokunulmaz. Silmeden önce belgeni dışa aktarabilirsin.
 
+**Paylaşım bağlantıları:** içerik adresin `#` kısmında taşınır; tarayıcı bu kısmı sunucuya göndermez, yani sunucu ve erişim kayıtları diyagramı görmez. Bağlantı o anın bir **kopyasıdır** (sonradan değişmez, geri çekilemez) ve bağlantıya sahip herkes içeriği okuyabilir; gizli bilgi içeren diyagramları paylaşırken bunu göz önünde bulundurun. Bağlantı, uygulamanın çalıştığı adresten üretilir; alan adı ya da alt alan adı değişse de aynı bağlantı biçimi her yerde açılır.
+
 > Sayfa açıkken internet gerekmez; sayfayı yeniden yüklemek için gerekir (service worker yoktur).
 
 ---
 
 ## Hızlı Başlangıç (Geliştirme)
 
-Gereksinimler: [Node.js](https://nodejs.org/) 20.19+ (ya da 22.12+) ve npm. CI Node 22, Docker imajı Node 24 ile derler.
+Gereksinimler: [Node.js](https://nodejs.org/) 20.19+ (ya da 22.12+) ve npm. CI ve Docker imajı Node 24 ile derler.
 
 ```bash
 # Bağımlılıkları kur
@@ -97,6 +101,23 @@ docker run -e PORT=8765 -p 8765:8765 my-flowchart
 ```
 
 Tarayıcıda **http://localhost:8765** adresini açın. Hepsi bu kadar.
+
+### Docker Compose ile
+
+Aynı kurulumu `compose.yaml` ile de çalıştırabilirsiniz (yeniden başlatma politikası dahil):
+
+```bash
+# Derle ve arka planda başlat (http://localhost:8765)
+docker compose up -d --build
+
+# Farklı port ve commit bilgisiyle
+PORT=9090 GIT_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build
+
+# Durdur ve kaldır
+docker compose down
+```
+
+`PORT` hem konteynerin dinlediği hem de host'a yayınlanan portu belirler (varsayılan `8765`). `GIT_COMMIT` verilmezse Hakkında modalında commit görünmez.
 
 ### Commit bilgisini imaja ekleme
 
@@ -153,6 +174,7 @@ src/
 - **i18n:** İki katmanlı — React bileşenleri `useTranslation()` hook'unu, React dışı kod (store'lar) ise `rt()` runtime çevirisini kullanır. Şablonların başlığı, açıklaması ve diyagram kaynağı her iki dilde de tutulur.
 - **Çoklu sekme:** Başka bir sekmenin yazdığı taslak ezilmeden önce geçmişe alınır; geçmiş ve ayarlar `storage` olayıyla eşitlenir. "Tüm verileri sil" çalışınca bekleyen yazmalar engellenir ve diğer sekmeler yenilenir.
 - **PNG güvenliği:** Mermaid `htmlLabels: false` ile yapılandırılır (ELK düzeni için kök seviyede verilmesi gerekir); etiketler `<foreignObject>` yerine `<text>` olur, böylece SVG canvas'a çizilirken kirlenmez (tainted canvas) ve `toBlob()` güvenle çalışır. Tek istisna mindmap'tir: HTML etiketle çizilir ve PNG alınırken `<foreignObject>` öğeleri `<text>`'e çevrilir.
+- **Paylaşım biçimi:** `#s=1.<veri>`. Veri, `{t: başlık, d: açıklama, c: kod}` JSON'unun tarayıcının yerleşik `CompressionStream('deflate-raw')` ile sıkıştırılıp base64url'e çevrilmiş halidir (`1` = sıkıştırmalı, `0` = sıkıştırmasız yedek; bilinmeyen sürüm "desteklenmiyor" sayılır). Açarken çözülmüş boyut 256 KB ile sınırlanır (sıkıştırma bombasına karşı), alanlar doğrulanır ve render zaten `securityLevel: 'strict'` ile yapılır. Bağlantı, Safari'nin `await` sonrası paylaş/kopyala çağrılarını reddetmesi yüzünden arka planda önceden hesaplanır. Bağlantı 8.000 karakteri aşarsa kullanıcı uyarılır.
 - **Sürüm bilgisi:** `vite.config.ts`, derleme sırasında `package.json`'dan sürümü, `node_modules`'tan **kurulu** bağımlılık sürümlerini ve git'ten commit'i okuyup `define` ile uygulamaya gömer. Hakkında modalında hangi bağımlılıkların gösterileceği `SHOWN_DEPENDENCIES` listesinde tutulur.
 
 ---

@@ -11,7 +11,8 @@ interface SplitPaneProps {
 }
 
 const MIN_LEFT_PX = 260
-const MIN_RIGHT_PX = 300
+// Önizleme araç çubuğunun (8 buton) taşmadan sığması için gereken genişlik.
+const MIN_RIGHT_PX = 360
 
 export function SplitPane({
   left,

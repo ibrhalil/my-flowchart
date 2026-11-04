@@ -32,6 +32,10 @@ export interface DiagramState {
     description?: string
     theme?: AppTheme
     pngScale?: number
+    /** Mevcut belge kaydedilmemiş olarak işaretlenmese de (örn. açılışta) geçmişe yedeklenir. */
+    backupCurrent?: boolean
+    /** Başarılı yüklemede `Yüklendi` yerine gösterilecek bildirim. */
+    notice?: string
   }) => void
   /** Boş bir belge açar; kaydedilmemiş düzenleme önce geçmişe alınır. */
   newDocument: () => void
@@ -71,6 +75,13 @@ let writesBlocked = false
 
 const newHistoryId = () => `h-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
 
+/** Boş belge ya da hiç dokunulmamış varsayılan şablon yedeklenmeye değmez (geçmiş gereksiz dolmasın). */
+function isWorthBackingUp(s: DiagramState): boolean {
+  const code = s.code.trim()
+  if (!code) return false
+  return code !== DEFAULT_TEMPLATE.code.trim() && code !== (DEFAULT_TEMPLATE.codeEn ?? '').trim()
+}
+
 /** Kaydedilmemiş düzenlemeyi geçmişe alır; yazma başarısızsa true döner. */
 function backupDirtyState(get: () => DiagramState): boolean {
   if (!get().dirty) return false
@@ -105,6 +116,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     }
 
     // Kullanıcı düzenlemesi kaybolmasın diye mevcut durum önce geçmişe alınır.
+    if (p.backupCurrent && isWorthBackingUp(get())) set({ dirty: true })
     const backupFailed = backupDirtyState(get)
 
     // Yeni belge, önceki belgenin başlığını/açıklamasını miras almaz.
@@ -114,7 +126,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       description: p.description ?? '',
       updatedAt: Date.now(),
       dirty: false,
-      toast: rt(backupFailed ? 'toasts.loadedNotBackedUp' : 'toasts.loaded'),
+      toast: backupFailed ? rt('toasts.loadedNotBackedUp') : (p.notice ?? rt('toasts.loaded')),
     })
   },
 

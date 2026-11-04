@@ -15,6 +15,7 @@ import { Toast } from './components/Layout/Toast'
 import { useApplyTheme } from './hooks/useApplyTheme'
 import { useAutoSnapshot } from './hooks/useAutoSnapshot'
 import { useCrossTabSync } from './hooks/useCrossTabSync'
+import { useSharedLink } from './hooks/useSharedLink'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { useTranslation } from './lib/i18n'
 
@@ -24,6 +25,7 @@ export default function App() {
   useApplyTheme()
   useAutoSnapshot()
   useCrossTabSync()
+  useSharedLink()
 
   const isDesktop = useMediaQuery(DESKTOP_QUERY)
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor')
