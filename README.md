@@ -3,6 +3,8 @@
 > Tarayıcıda çalışan, **sunucusuz** Mermaid diyagram editörü.
 > Yaz, canlı önizle, dışa aktar. Hiçbir veri cihazından çıkmaz.
 
+**Canlı:** https://flowchart.ibrhalil.com
+
 [![CI](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -12,23 +14,56 @@ My Flowchart, [Mermaid](https://mermaid.js.org/) sözdizimiyle akış şemaları
 
 ## Özellikler
 
-- **Canlı önizleme** — yazdıkça diyagram anında güncellenir
+**Yazma ve önizleme**
+
+- **Canlı önizleme** — yazdıkça diyagram anında güncellenir; geçici söz dizimi hatasında son geçerli diyagram ekranda kalır
 - **17+ diyagram türü** — flowchart, sequence, class, state, ER, gantt, pie, journey, git, mindmap, timeline, quadrant, requirement, architecture, xychart, block, kanban
-- **24 hazır şablon** ile hızlı başlangıç
-- **5 formatta dışa aktarım** — PNG, SVG, Markdown, `.mmd`, JSON
-- **İçe aktarım** — `.mmd`, `.json` ve `.md` (frontmatter + kod bloğu) dosyaları
-- **Otomatik taslak kaydı** + **geçmiş anlık görüntüleri** (tarayıcı deposunda)
-- **Söz dizimi linter'ı** — ASCII olmayan düğüm kimliklerini ve tırnaksız etiketleri yakalar, tek tıkla düzeltir
-- **Zoom / pan / tam ekran** ve ekrana sığdır
-- **Açık & koyu tema**, TR / EN dil seçenekleri
 - CodeMirror 6 tabanlı editör (katlama, arama, satır numaraları)
-- **Verin cihazında kalır** — diyagramlar yalnızca tarayıcı deposunda tutulur, sunucuya gönderilmez (sayfa açıkken internet gerekmez; yeniden yüklemek için gerekir)
+- **Söz dizimi linter'ı** — ASCII olmayan düğüm kimliklerini ve tırnaksız etiketleri yakalar, tek tıkla düzeltir
+- **Zoom / pan / tam ekran** ve ekrana sığdır (`Ctrl/⌘ + tekerlek` ile zoom)
+
+**Şablonlar ve yeni belge**
+
+- **40 hazır şablon**, her biri Türkçe ve İngilizce içerikli; arama, tür filtresi ve her türün **ne için kullanıldığını** anlatan ipuçlarıyla
+- **Yeni diyagram** — şablon seçerek ya da boş belgeyle başla; logoya basmak doğrudan boş bir diyagram açar. Kaydedilmemiş çalışman önce geçmişe alınır
+
+**Dışa ve içe aktarım**
+
+- **5 formatta dışa aktarım** — PNG, SVG, Markdown, `.mmd`, JSON. PNG, önizlemeyle birebir aynı görünür (kenar boşluğu ve tema zemini dahil)
+- **İçe aktarım** — `.mmd`, `.json` ve `.md` (frontmatter + kod bloğu). `.mmd` dosyasının başındaki `%%` yorum satırları açıklama olarak okunur; dışa aktarırken açıklama aynı şekilde dosyanın başına yazılır
+
+**Kayıt ve geçmiş**
+
+- **Otomatik taslak kaydı** + **geçmiş anlık görüntüleri** (en fazla 50 kayıt, tarayıcı deposunda). Geri yüklemek için satırın herhangi bir yerine tıklamak yeterli
+- **Çoklu sekme güvenliği** — iki sekme aynı belgeyi düzenlerse biri diğerinin işini ezmez; ezilecek sürüm geçmişe kaydedilir. Geçmiş ve ayarlar sekmeler arasında canlı eşitlenir
+
+**Arayüz**
+
+- **Açık tema varsayılandır**, koyu tema isteğe bağlı; arayüz dili tarayıcı dilinden algılanır (TR / EN), Ayarlar'dan değiştirilebilir
+- **Hakkında** — uygulama sürümü, commit, derleme tarihi ve önemli bağımlılıkların sürümleri (header'daki sürüm düğmesi ya da Ayarlar'dan)
+
+---
+
+## Veri ve Gizlilik
+
+Diyagramlar **yalnızca tarayıcının `localStorage` alanında** tutulur, hiçbir sunucuya gönderilmez. Uygulama şu anahtarları kullanır:
+
+| Anahtar                       | İçerik                                    |
+| ----------------------------- | ----------------------------------------- |
+| `mermaid-studio:draft:v1`     | Çalışılan belge (başlık, açıklama, kod)   |
+| `mermaid-studio:history:v1`   | Geçmiş anlık görüntüleri                  |
+| `my-flowchart-settings`       | Tema, yazı boyutu, PNG çözünürlüğü, otomatik kayıt |
+| `my-flowchart-locale`         | Seçilen arayüz dili                       |
+
+Hepsini silmek için **Ayarlar → Veriler → Tüm verileri sil** (iki adımlı onay ister, geri alınamaz). Yalnızca bu uygulamanın anahtarları silinir; aynı alan adındaki başka verilere dokunulmaz. Silmeden önce belgeni dışa aktarabilirsin.
+
+> Sayfa açıkken internet gerekmez; sayfayı yeniden yüklemek için gerekir (service worker yoktur).
 
 ---
 
 ## Hızlı Başlangıç (Geliştirme)
 
-Gereksinimler: [Node.js](https://nodejs.org/) 20.19+ (ya da 22.12+) ve npm.
+Gereksinimler: [Node.js](https://nodejs.org/) 20.19+ (ya da 22.12+) ve npm. CI Node 22, Docker imajı Node 24 ile derler.
 
 ```bash
 # Bağımlılıkları kur
@@ -63,6 +98,14 @@ docker run -e PORT=8765 -p 8765:8765 my-flowchart
 
 Tarayıcıda **http://localhost:8765** adresini açın. Hepsi bu kadar.
 
+### Commit bilgisini imaja ekleme
+
+`.git` klasörü imaja girmediği için Hakkında modalındaki commit numarası varsayılan olarak boş kalır. Göstermek için build argümanı verin:
+
+```bash
+docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) -t my-flowchart .
+```
+
 ### Port değiştirme (çoklu uygulama)
 
 Hizmet portu, `PORT` ortam değişkeni ile runtime'da ayarlanır (varsayılan `8765`; `8080`/`3000` gibi yaygın portlardan kaçınır). Aynı sunucuda birden fazla UI uygulaması çalıştırıyorsanız, her örneğe farklı bir port verin:
@@ -74,7 +117,7 @@ docker run -e PORT=9090 -p 9090:9090 my-flowchart
 
 > `-e PORT=<port>` konteynerin dinlediği portu, `-p <port>:<port>` ise host'a yayınlanan portu belirler. İkisi aynı olmalıdır.
 
-> Image, çok aşamalı (multi-stage) derleme kullanır: Node ile derlenir, ardından ~65 MB'lık `nginx:alpine` üzerinde sunulur. SPA yönlendirmesi, gzip sıkıştırması, yapılandırılabilir port ve sağlık kontrolü içerir.
+> Image, çok aşamalı (multi-stage) derleme kullanır: `node:24-alpine` ile derlenir, ardından `nginx:stable-alpine` üzerinde sunulur (toplam ~71 MB). SPA yönlendirmesi, gzip sıkıştırması, hash'li dosyalar için uzun süreli önbellek, yapılandırılabilir port ve sağlık kontrolü içerir.
 
 ---
 
@@ -83,6 +126,7 @@ docker run -e PORT=9090 -p 9090:9090 my-flowchart
 `npm run build` sonrası `dist/` klasörü herhangi bir statik sunucuya konabilir:
 
 - **Statik sunucular:** GitHub Pages, Netlify, Vercel, Cloudflare Pages
+- **Cloudflare (Workers statik varlıklar):** `wrangler.jsonc` hazırdır; `dist/` klasörünü SPA yönlendirmesiyle sunar
 - **Kendi sunucun:** `nginx` (örnek yapılandırma için `nginx.conf.template` dosyasına bakın) veya `caddy`
 - **Docker:** Yukarıdaki yöntem
 
@@ -94,10 +138,10 @@ docker run -e PORT=9090 -p 9090:9090 my-flowchart
 
 ```
 src/
-├── components/     # UI bileşenleri (Editor, Preview, Gallery, Layout, Settings)
-├── data/           # Şablonlar ve TR/EN çeviri sözlükleri
-├── hooks/          # Yeniden kullanılabilir React hook'ları
-├── lib/            # i18n (React context + runtime aynası)
+├── components/     # UI bileşenleri (Editor, Preview, Gallery, History, Layout, Settings, ui)
+├── data/           # Şablonlar (TR/EN kaynaklı) ve TR/EN çeviri sözlükleri
+├── hooks/          # Yeniden kullanılabilir React hook'ları (otomatik kayıt, sekmeler arası eşitleme vb.)
+├── lib/            # i18n (React context + runtime aynası), derleme zamanı sürüm bilgisi
 ├── services/       # Mermaid render, dışa/içe aktarım, depolama, dönüştürme
 ├── store/          # Zustand store'ları (diagram + ayarlar)
 └── types/          # Paylaşılan TypeScript tipleri
@@ -105,9 +149,11 @@ src/
 
 ### Mimari notlar
 
-- **Durum yönetimi:** İki Zustand store'u — `diagramStore` (belge içeriği, geçmiş) ve `settingsStore` (tema, dil, dışa aktarım ayarları; kalıcı).
-- **i18n:** İki katmanlı — React bileşenleri `useTranslation()` hook'unu, React dışı kod (store'lar) ise `rt()` runtime çevirisini kullanır.
-- **PNG güvenliği:** Mermaid `htmlLabels: false` ile yapılandırılır; böylece SVG canvas'a çizilirken kirlenmez (tainted canvas) ve `toBlob()` güvenle çalışır.
+- **Durum yönetimi:** İki Zustand store'u — `diagramStore` (belge içeriği, geçmiş) ve `settingsStore` (tema, yazı boyutu, dışa aktarım ve otomatik kayıt ayarları; kalıcı). Taslak, tuş vuruşlarından sonra kısa bir gecikmeyle yazılır; sayfa kapanırken bekleyen kayıt hemen yazılır.
+- **i18n:** İki katmanlı — React bileşenleri `useTranslation()` hook'unu, React dışı kod (store'lar) ise `rt()` runtime çevirisini kullanır. Şablonların başlığı, açıklaması ve diyagram kaynağı her iki dilde de tutulur.
+- **Çoklu sekme:** Başka bir sekmenin yazdığı taslak ezilmeden önce geçmişe alınır; geçmiş ve ayarlar `storage` olayıyla eşitlenir. "Tüm verileri sil" çalışınca bekleyen yazmalar engellenir ve diğer sekmeler yenilenir.
+- **PNG güvenliği:** Mermaid `htmlLabels: false` ile yapılandırılır (ELK düzeni için kök seviyede verilmesi gerekir); etiketler `<foreignObject>` yerine `<text>` olur, böylece SVG canvas'a çizilirken kirlenmez (tainted canvas) ve `toBlob()` güvenle çalışır. Tek istisna mindmap'tir: HTML etiketle çizilir ve PNG alınırken `<foreignObject>` öğeleri `<text>`'e çevrilir.
+- **Sürüm bilgisi:** `vite.config.ts`, derleme sırasında `package.json`'dan sürümü, `node_modules`'tan **kurulu** bağımlılık sürümlerini ve git'ten commit'i okuyup `define` ile uygulamaya gömer. Hakkında modalında hangi bağımlılıkların gösterileceği `SHOWN_DEPENDENCIES` listesinde tutulur.
 
 ---
 

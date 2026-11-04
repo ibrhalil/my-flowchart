@@ -29,8 +29,10 @@ const SHOWN_DEPENDENCIES: [label: string, pkg: string][] = [
   ['Vite', 'vite'],
 ]
 
-// Docker derlemesinde .git yoktur; commit bilgisi o zaman boş kalır.
+// Docker derlemesinde .git yoktur; commit `--build-arg GIT_COMMIT=…` ile dışarıdan verilir.
 function gitCommit(): string | null {
+  const fromEnv = process.env.GIT_COMMIT?.trim()
+  if (fromEnv) return fromEnv
   const git = (args: string) =>
     execSync(`git ${args}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
   try {

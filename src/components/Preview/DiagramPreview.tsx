@@ -200,13 +200,13 @@ export function DiagramPreview() {
   useEffect(() => {
     const scroller = scrollRef.current
     if (!scroller) return
-    let previousWidth = scroller.getBoundingClientRect().width
-    let previousHeight = scroller.getBoundingClientRect().height
+    const last = scroller.getBoundingClientRect()
+    const previous = { width: last.width, height: last.height }
     const observer = new ResizeObserver(() => {
       const { width, height } = scroller.getBoundingClientRect()
-      if (width === previousWidth && height === previousHeight) return
-      previousWidth = width
-      previousHeight = height
+      if (width === previous.width && height === previous.height) return
+      previous.width = width
+      previous.height = height
       refitIfAuto()
     })
     observer.observe(scroller)
