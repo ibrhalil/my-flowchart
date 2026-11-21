@@ -1,199 +1,221 @@
 # My Flowchart
 
-> Tarayıcıda çalışan, **sunucusuz** Mermaid diyagram editörü.
-> Yaz, canlı önizle, dışa aktar. Hiçbir veri cihazından çıkmaz.
+> A **serverless** Mermaid diagram editor that runs in your browser.
+> Write, preview live, export. No data ever leaves your device.
 
 [![CI](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrhalil/my-flowchart/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-My Flowchart, [Mermaid](https://mermaid.js.org/) sözdizimiyle akış şemaları, sekans diyagramları ve daha fazlasını oluşturmak için tasarlanmış, sade ve hızlı bir arayüzdür. Tüm işlemler tarayıcıda yapılır — kurulum, hesap veya arka uç gerekmez.
+My Flowchart is a clean, fast interface for creating flowcharts, sequence diagrams and more with [Mermaid](https://mermaid.js.org/) syntax. Everything happens in the browser — no installation, account or backend required.
 
 ---
 
-## Özellikler
+## Screenshots
 
-**Yazma ve önizleme**
+<p align="center">
+  <img src="docs/images/rsm1.jpeg" alt="My Flowchart main screen: Mermaid code on the left, live diagram preview on the right" width="900">
+  <br>
+  <em>Mermaid code on the left, live preview on the right</em>
+</p>
 
-- **Canlı önizleme** — yazdıkça diyagram anında güncellenir; geçici söz dizimi hatasında son geçerli diyagram ekranda kalır
-- **17+ diyagram türü** — flowchart, sequence, class, state, ER, gantt, pie, journey, git, mindmap, timeline, quadrant, requirement, architecture, xychart, block, kanban
-- CodeMirror 6 tabanlı editör (katlama, arama, satır numaraları)
-- **Söz dizimi linter'ı** — ASCII olmayan düğüm kimliklerini ve tırnaksız etiketleri yakalar, tek tıkla düzeltir
-- **Zoom / pan / tam ekran** ve ekrana sığdır (`Ctrl/⌘ + tekerlek` ile zoom)
+<p align="center">
+  <img src="docs/images/rsm3.jpeg" alt="Full-screen diagram preview" width="900">
+  <br>
+  <em>Full-screen preview — zoom, pan and fit to screen</em>
+</p>
 
-**Şablonlar ve yeni belge**
-
-- **40 hazır şablon**, her biri Türkçe ve İngilizce içerikli; arama, tür filtresi ve her türün **ne için kullanıldığını** anlatan ipuçlarıyla
-- **Yeni diyagram** — şablon seçerek ya da boş belgeyle başla; logoya basmak doğrudan boş bir diyagram açar. Kaydedilmemiş çalışman önce geçmişe alınır
-
-**Dışa ve içe aktarım**
-
-- **5 formatta dışa aktarım** — PNG, SVG, Markdown, `.mmd`, JSON. PNG, önizlemeyle birebir aynı görünür (kenar boşluğu ve tema zemini dahil)
-- **İçe aktarım** — `.mmd`, `.json` ve `.md` (frontmatter + kod bloğu). `.mmd` dosyasının başındaki `%%` yorum satırları açıklama olarak okunur; dışa aktarırken açıklama aynı şekilde dosyanın başına yazılır
-
-**Paylaşım**
-
-- **Paylaşım bağlantısı** — Paylaş butonu diyagramı (başlık, açıklama, kod) tek bir bağlantıya kodlar; sunucu gerekmez. Masaüstünde bağlantı panoya kopyalanır, mobilde sistem paylaşım menüsü açılır. Bağlantıyı açan kişide diyagram otomatik yüklenir; kendi çalışması önce geçmişe kaydedilir
-
-**Kayıt ve geçmiş**
-
-- **Otomatik taslak kaydı** + **geçmiş anlık görüntüleri** (en fazla 50 kayıt, tarayıcı deposunda). Geri yüklemek için satırın herhangi bir yerine tıklamak yeterli
-- **Çoklu sekme güvenliği** — iki sekme aynı belgeyi düzenlerse biri diğerinin işini ezmez; ezilecek sürüm geçmişe kaydedilir. Geçmiş ve ayarlar sekmeler arasında canlı eşitlenir
-
-**Arayüz**
-
-- **Açık tema varsayılandır**, koyu tema isteğe bağlı; arayüz dili tarayıcı dilinden algılanır (TR / EN), Ayarlar'dan değiştirilebilir
-- **Hakkında** — uygulama sürümü, commit, derleme tarihi ve önemli bağımlılıkların sürümleri (header'daki sürüm düğmesi ya da Ayarlar'dan)
+<p align="center">
+  <img src="docs/images/rsm2.jpeg" alt="Export menu: PNG, SVG, Markdown, Mermaid source and JSON" width="300">
+  <br>
+  <em>Export in 5 formats: PNG, SVG, Markdown, <code>.mmd</code>, JSON</em>
+</p>
 
 ---
 
-## Veri ve Gizlilik
+## Features
 
-Diyagramlar **yalnızca tarayıcının `localStorage` alanında** tutulur, hiçbir sunucuya gönderilmez. Uygulama şu anahtarları kullanır:
+**Writing and preview**
 
-| Anahtar                       | İçerik                                    |
-| ----------------------------- | ----------------------------------------- |
-| `mermaid-studio:draft:v1`     | Çalışılan belge (başlık, açıklama, kod)   |
-| `mermaid-studio:history:v1`   | Geçmiş anlık görüntüleri                  |
-| `my-flowchart-settings`       | Tema, yazı boyutu, PNG çözünürlüğü, otomatik kayıt |
-| `my-flowchart-locale`         | Seçilen arayüz dili                       |
+- **Live preview** — the diagram updates as you type; on a temporary syntax error the last valid diagram stays on screen
+- **17+ diagram types** — flowchart, sequence, class, state, ER, gantt, pie, journey, git, mindmap, timeline, quadrant, requirement, architecture, xychart, block, kanban
+- CodeMirror 6 based editor (folding, search, line numbers)
+- **Syntax linter** — catches non-ASCII node IDs and unquoted labels, and fixes them with one click
+- **Zoom / pan / full screen** and fit to screen (`Ctrl/⌘ + wheel` to zoom)
 
-Hepsini silmek için **Ayarlar → Veriler → Tüm verileri sil** (iki adımlı onay ister, geri alınamaz). Yalnızca bu uygulamanın anahtarları silinir; aynı alan adındaki başka verilere dokunulmaz. Silmeden önce belgeni dışa aktarabilirsin.
+**Templates and new documents**
 
-**Paylaşım bağlantıları:** içerik adresin `#` kısmında taşınır; tarayıcı bu kısmı sunucuya göndermez, yani sunucu ve erişim kayıtları diyagramı görmez. Bağlantı o anın bir **kopyasıdır** (sonradan değişmez, geri çekilemez) ve bağlantıya sahip herkes içeriği okuyabilir; gizli bilgi içeren diyagramları paylaşırken bunu göz önünde bulundurun. Bağlantı, uygulamanın çalıştığı adresten üretilir; alan adı ya da alt alan adı değişse de aynı bağlantı biçimi her yerde açılır.
+- **40 ready-made templates**, each with Turkish and English content; with search, a type filter and hints explaining **what each type is used for**
+- **New diagram** — start from a template or a blank document; clicking the logo opens a blank diagram directly. Your unsaved work is moved to history first
 
-> Sayfa açıkken internet gerekmez; sayfayı yeniden yüklemek için gerekir (service worker yoktur).
+**Export and import**
+
+- **5 export formats** — PNG, SVG, Markdown, `.mmd`, JSON. PNG looks exactly like the preview (including margins and the theme background)
+- **Import** — `.mmd`, `.json` and `.md` (frontmatter + code block). Leading `%%` comment lines in an `.mmd` file are read as the description; on export, the description is written back to the top of the file the same way
+
+**Sharing**
+
+- **Share link** — the Share button encodes the diagram (title, description, code) into a single link; no server needed. On desktop the link is copied to the clipboard, on mobile the system share sheet opens. Whoever opens the link gets the diagram loaded automatically; their own work is saved to history first
+
+**Saving and history**
+
+- **Automatic draft saving** + **history snapshots** (up to 50 entries, kept in browser storage). Click anywhere on a row to restore it
+- **Multi-tab safety** — if two tabs edit the same document, one never overwrites the other's work; the version about to be overwritten is saved to history. History and settings are synced live between tabs
+
+**Interface**
+
+- **Light theme is the default**, dark theme is optional; the interface language is detected from the browser language (TR / EN) and can be changed in Settings
+- **About** — app version, commit, build date and versions of key dependencies (from the version button in the header or from Settings)
 
 ---
 
-## Hızlı Başlangıç (Geliştirme)
+## Data and Privacy
 
-Gereksinimler: [Node.js](https://nodejs.org/) 20.19+ (ya da 22.12+) ve npm. CI ve Docker imajı Node 24 ile derler.
+Diagrams are kept **only in the browser's `localStorage`** and are never sent to any server. The app uses these keys:
+
+| Key                           | Content                                              |
+| ----------------------------- | ---------------------------------------------------- |
+| `mermaid-studio:draft:v1`     | The working document (title, description, code)      |
+| `mermaid-studio:history:v1`   | History snapshots                                    |
+| `my-flowchart-settings`       | Theme, font size, PNG resolution, auto-save          |
+| `my-flowchart-locale`         | Selected interface language                          |
+
+To delete everything, use **Settings → Data → Delete all data** (asks for two-step confirmation and cannot be undone). Only this app's keys are deleted; other data on the same origin is left untouched. You can export your document before deleting.
+
+**Share links:** the content travels in the `#` part of the address; browsers do not send that part to the server, so servers and access logs never see the diagram. A link is a **copy** of the diagram at that moment (it never changes afterwards and cannot be revoked), and anyone with the link can read the content; keep this in mind when sharing diagrams that contain confidential information. The link is generated from the address the app is served at; even if the domain or subdomain changes, the same link format opens everywhere.
+
+> No internet connection is needed while the page is open; one is needed to reload the page (there is no service worker).
+
+---
+
+## Quick Start (Development)
+
+Requirements: [Node.js](https://nodejs.org/) 20.19+ (or 22.12+) and npm. CI and the Docker image build with Node 24.
 
 ```bash
-# Bağımlılıkları kur
+# Install dependencies
 npm install
 
-# Geliştirme sunucusunu başlat (http://localhost:5173)
+# Start the development server (http://localhost:5173)
 npm run dev
 ```
 
-### Kullanılabilir komutlar
+### Available commands
 
-| Komut            | Açıklama                                  |
-| ---------------- | ----------------------------------------- |
-| `npm run dev`    | Vite geliştirme sunucusu (HMR)            |
-| `npm run build`  | Tip kontrolü + üretim derlemesi → `dist/` |
-| `npm run preview`| Üretim derlemesini yerelde önizle         |
-| `npm run lint`   | [oxlint](https://oxc.rs/) ile kod denetimi |
+| Command           | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `npm run dev`     | Vite development server (HMR)                  |
+| `npm run build`   | Type check + production build → `dist/`        |
+| `npm run preview` | Preview the production build locally           |
+| `npm run lint`    | Lint the code with [oxlint](https://oxc.rs/)   |
 
 ---
 
-## Docker ile Çalıştırma
+## Running with Docker
 
-Proje tamamen statik bir SPA'dır. Tek komutla ayağa kaldırabilirsiniz:
+The project is a fully static SPA. You can bring it up with a single command:
 
 ```bash
-# İmajı derle
+# Build the image
 docker build -t my-flowchart .
 
-# Varsayılan port (8765) üzerinde çalıştır
+# Run on the default port (8765)
 docker run -e PORT=8765 -p 8765:8765 my-flowchart
 ```
 
-Tarayıcıda **http://localhost:8765** adresini açın. Hepsi bu kadar.
+Open **http://localhost:8765** in your browser. That's it.
 
-### Docker Compose ile
+### With Docker Compose
 
-Aynı kurulumu `compose.yaml` ile de çalıştırabilirsiniz (yeniden başlatma politikası dahil):
+You can run the same setup with `compose.yaml` (restart policy included):
 
 ```bash
-# Derle ve arka planda başlat (http://localhost:8765)
+# Build and start in the background (http://localhost:8765)
 docker compose up -d --build
 
-# Farklı port ve commit bilgisiyle
+# With a different port and commit info
 PORT=9090 GIT_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build
 
-# Durdur ve kaldır
+# Stop and remove
 docker compose down
 ```
 
-`PORT` hem konteynerin dinlediği hem de host'a yayınlanan portu belirler (varsayılan `8765`). `GIT_COMMIT` verilmezse Hakkında modalında commit görünmez.
+`PORT` sets both the port the container listens on and the port published on the host (default `8765`). If `GIT_COMMIT` is not given, the commit is not shown in the About modal.
 
-### Commit bilgisini imaja ekleme
+### Adding commit info to the image
 
-`.git` klasörü imaja girmediği için Hakkında modalındaki commit numarası varsayılan olarak boş kalır. Göstermek için build argümanı verin:
+Since the `.git` folder is not copied into the image, the commit number in the About modal is empty by default. To show it, pass a build argument:
 
 ```bash
 docker build --build-arg GIT_COMMIT=$(git rev-parse --short HEAD) -t my-flowchart .
 ```
 
-### Port değiştirme (çoklu uygulama)
+### Changing the port (multiple apps)
 
-Hizmet portu, `PORT` ortam değişkeni ile runtime'da ayarlanır (varsayılan `8765`; `8080`/`3000` gibi yaygın portlardan kaçınır). Aynı sunucuda birden fazla UI uygulaması çalıştırıyorsanız, her örneğe farklı bir port verin:
+The service port is set at runtime with the `PORT` environment variable (default `8765`; it avoids common ports like `8080`/`3000`). If you run several UI apps on the same server, give each instance a different port:
 
 ```bash
-# İkinci bir örneği 9090 portunda çalıştır
+# Run a second instance on port 9090
 docker run -e PORT=9090 -p 9090:9090 my-flowchart
 ```
 
-> `-e PORT=<port>` konteynerin dinlediği portu, `-p <port>:<port>` ise host'a yayınlanan portu belirler. İkisi aynı olmalıdır.
+> `-e PORT=<port>` sets the port the container listens on, and `-p <port>:<port>` sets the port published on the host. Both must be the same.
 
-> Image, çok aşamalı (multi-stage) derleme kullanır: `node:24-alpine` ile derlenir, ardından `nginx:stable-alpine` üzerinde sunulur (toplam ~71 MB). SPA yönlendirmesi, gzip sıkıştırması, hash'li dosyalar için uzun süreli önbellek, yapılandırılabilir port ve sağlık kontrolü içerir.
-
----
-
-## Üretim Dağıtımı
-
-`npm run build` sonrası `dist/` klasörü herhangi bir statik sunucuya konabilir:
-
-- **Statik sunucular:** GitHub Pages, Netlify, Vercel, Cloudflare Pages
-- **Cloudflare (Workers statik varlıklar):** `wrangler.jsonc` hazırdır; `dist/` klasörünü SPA yönlendirmesiyle sunar
-- **Kendi sunucun:** `nginx` (örnek yapılandırma için `nginx.conf.template` dosyasına bakın) veya `caddy`
-- **Docker:** Yukarıdaki yöntem
-
-> Not: Uygulama kök dizinde servis edilecek şekilde yapılandırılmıştır. Alt dizine dağıtmak için `vite.config.ts` içindeki `base` ayarını değiştirin.
+> The image uses a multi-stage build: it is built with `node:24-alpine` and then served on `nginx:stable-alpine` (~71 MB in total). It includes SPA routing, gzip compression, long-term caching for hashed files, a configurable port and a health check.
 
 ---
 
-## Proje Yapısı
+## Production Deployment
+
+After `npm run build`, the `dist/` folder can be put on any static server:
+
+- **Static hosts:** GitHub Pages, Netlify, Vercel, Cloudflare Pages
+- **Cloudflare (Workers static assets):** `wrangler.jsonc` is ready; it serves the `dist/` folder with SPA routing
+- **Your own server:** `nginx` (see `nginx.conf.template` for an example configuration) or `caddy`
+- **Docker:** the method above
+
+> Note: The app is configured to be served from the root path. To deploy under a subpath, change the `base` setting in `vite.config.ts`.
+
+---
+
+## Project Structure
 
 ```
 src/
-├── components/     # UI bileşenleri (Editor, Preview, Gallery, History, Layout, Settings, ui)
-├── data/           # Şablonlar (TR/EN kaynaklı) ve TR/EN çeviri sözlükleri
-├── hooks/          # Yeniden kullanılabilir React hook'ları (otomatik kayıt, sekmeler arası eşitleme vb.)
-├── lib/            # i18n (React context + runtime aynası), derleme zamanı sürüm bilgisi
-├── services/       # Mermaid render, dışa/içe aktarım, depolama, dönüştürme
-├── store/          # Zustand store'ları (diagram + ayarlar)
-└── types/          # Paylaşılan TypeScript tipleri
+├── components/     # UI components (Editor, Preview, Gallery, History, Layout, Settings, ui)
+├── data/           # Templates (TR/EN sources) and TR/EN translation dictionaries
+├── hooks/          # Reusable React hooks (auto-save, cross-tab sync, etc.)
+├── lib/            # i18n (React context + runtime mirror), build-time version info
+├── services/       # Mermaid rendering, export/import, storage, conversion
+├── store/          # Zustand stores (diagram + settings)
+└── types/          # Shared TypeScript types
 ```
 
-### Mimari notlar
+### Architecture notes
 
-- **Durum yönetimi:** İki Zustand store'u — `diagramStore` (belge içeriği, geçmiş) ve `settingsStore` (tema, yazı boyutu, dışa aktarım ve otomatik kayıt ayarları; kalıcı). Taslak, tuş vuruşlarından sonra kısa bir gecikmeyle yazılır; sayfa kapanırken bekleyen kayıt hemen yazılır.
-- **i18n:** İki katmanlı — React bileşenleri `useTranslation()` hook'unu, React dışı kod (store'lar) ise `rt()` runtime çevirisini kullanır. Şablonların başlığı, açıklaması ve diyagram kaynağı her iki dilde de tutulur.
-- **Çoklu sekme:** Başka bir sekmenin yazdığı taslak ezilmeden önce geçmişe alınır; geçmiş ve ayarlar `storage` olayıyla eşitlenir. "Tüm verileri sil" çalışınca bekleyen yazmalar engellenir ve diğer sekmeler yenilenir.
-- **PNG güvenliği:** Mermaid `htmlLabels: false` ile yapılandırılır (ELK düzeni için kök seviyede verilmesi gerekir); etiketler `<foreignObject>` yerine `<text>` olur, böylece SVG canvas'a çizilirken kirlenmez (tainted canvas) ve `toBlob()` güvenle çalışır. Tek istisna mindmap'tir: HTML etiketle çizilir ve PNG alınırken `<foreignObject>` öğeleri `<text>`'e çevrilir.
-- **Paylaşım biçimi:** `#s=1.<veri>`. Veri, `{t: başlık, d: açıklama, c: kod}` JSON'unun tarayıcının yerleşik `CompressionStream('deflate-raw')` ile sıkıştırılıp base64url'e çevrilmiş halidir (`1` = sıkıştırmalı, `0` = sıkıştırmasız yedek; bilinmeyen sürüm "desteklenmiyor" sayılır). Açarken çözülmüş boyut 256 KB ile sınırlanır (sıkıştırma bombasına karşı), alanlar doğrulanır ve render zaten `securityLevel: 'strict'` ile yapılır. Bağlantı, Safari'nin `await` sonrası paylaş/kopyala çağrılarını reddetmesi yüzünden arka planda önceden hesaplanır. Bağlantı 8.000 karakteri aşarsa kullanıcı uyarılır.
-- **Sürüm bilgisi:** `vite.config.ts`, derleme sırasında `package.json`'dan sürümü, `node_modules`'tan **kurulu** bağımlılık sürümlerini ve git'ten commit'i okuyup `define` ile uygulamaya gömer. Hakkında modalında hangi bağımlılıkların gösterileceği `SHOWN_DEPENDENCIES` listesinde tutulur.
-
----
-
-## Katkıda Bulunma
-
-Katkılar memnuniyetle karşılanır! Basit akış:
-
-1. Repoyu fork'layın
-2. Bir özellik dalı açın (`git checkout -b ozellik/harika-bir-sey`)
-3. Değişikliklerinizi commit'leyin (`npm run lint` ve `npm run build`'ün geçtiğinden emin olun)
-4. Pull Request açın
-
-Lütfen commit'ten önce `npm run lint && npm run build` çalıştırarak kodun temiz ve derlenebilir olduğunu doğrulayın.
+- **State management:** Two Zustand stores — `diagramStore` (document content, history) and `settingsStore` (theme, font size, export and auto-save settings; persisted). The draft is written with a short delay after keystrokes; a pending save is written immediately when the page closes.
+- **i18n:** Two layers — React components use the `useTranslation()` hook, while non-React code (the stores) uses the `rt()` runtime translation. Template titles, descriptions and diagram sources are kept in both languages.
+- **Multi-tab:** A draft written by another tab is saved to history before it would be overwritten; history and settings are synced through the `storage` event. When "Delete all data" runs, pending writes are blocked and other tabs are reloaded.
+- **PNG safety:** Mermaid is configured with `htmlLabels: false` (it must be set at the root level for the ELK layout); labels become `<text>` instead of `<foreignObject>`, so the SVG does not taint the canvas when drawn and `toBlob()` works safely. The only exception is mindmap: it is drawn with HTML labels, and `<foreignObject>` elements are converted to `<text>` when exporting to PNG.
+- **Share format:** `#s=1.<data>`. The data is the JSON `{t: title, d: description, c: code}` compressed with the browser's built-in `CompressionStream('deflate-raw')` and encoded as base64url (`1` = compressed, `0` = uncompressed fallback; an unknown version is treated as "unsupported"). When opening, the decompressed size is capped at 256 KB (protection against decompression bombs), the fields are validated, and rendering already runs with `securityLevel: 'strict'`. The link is precomputed in the background because Safari rejects share/copy calls made after an `await`. If the link exceeds 8,000 characters, the user is warned.
+- **Version info:** At build time, `vite.config.ts` reads the version from `package.json`, the **installed** dependency versions from `node_modules` and the commit from git, and embeds them into the app via `define`. Which dependencies are shown in the About modal is kept in the `SHOWN_DEPENDENCIES` list.
 
 ---
 
-## Lisans
+## Contributing
+
+Contributions are welcome! A simple flow:
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/awesome-thing`)
+3. Commit your changes (make sure `npm run lint` and `npm run build` pass)
+4. Open a Pull Request
+
+Please run `npm run lint && npm run build` before committing to verify that the code is clean and builds.
+
+---
+
+## License
 
 [MIT](LICENSE) © Halil AYDIN
 
-Bu proje [Mermaid](https://mermaid.js.org/), [React](https://react.dev/), [Vite](https://vite.dev/), [CodeMirror](https://codemirror.net/) ve [Tailwind CSS](https://tailwindcss.com/) kullanır.
+This project uses [Mermaid](https://mermaid.js.org/), [React](https://react.dev/), [Vite](https://vite.dev/), [CodeMirror](https://codemirror.net/) and [Tailwind CSS](https://tailwindcss.com/).
